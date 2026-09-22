@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#efe6d2">
+<title>ヨット</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>window.Peer || document.write('<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"><\/script>');</script>
+<style>
+:root{
+  --bg:#efe6d2; --paper:#fffbf3; --line:#ebdfc9; --ink:#3b3029; --muted:#9a8b7a;
+  --p0:#e0593d; --p0s:#fde8e1; --p1:#2d7fb6; --p1s:#e0eef8;
+  --gold:#f0b429; --gold-d:#b07c00;
+  --felt:#21664d; --felt-d:#154534; --wood:#8a5a2b;
+  --ds:54px;
+}
+[hidden]{display:none !important}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; min-height:100vh; min-height:100dvh; color:var(--ink);
+  font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Meiryo",sans-serif;
+  background:var(--bg);
+  background-image:radial-gradient(rgba(0,0,0,.035) 1px, transparent 1px);
+  background-size:14px 14px;
+  -webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit;touch-action:manipulation}
+input{font:inherit}
+
+/* ---------- 共通パーツ ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  border:none; border-radius:14px; padding:13px 16px; cursor:pointer;
+  font-weight:800; font-size:16px; box-shadow:0 4px 0 rgba(0,0,0,.16);
+  transition:transform .08s, box-shadow .08s, filter .15s;
+}
+.btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.16)}
+.btn:disabled{cursor:default}
+.btn-p0{background:var(--p0);color:#fff}
+.btn-p1{background:var(--p1);color:#fff}
+.btn-gold{background:var(--gold);color:#3a2a00}
+.btn-ghost{background:#fff;color:var(--ink);border:2px solid var(--line);box-shadow:0 3px 0 var(--line)}
+.btn-ghost.danger{color:var(--p0)}
+.link{background:none;border:none;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:14px;padding:6px;align-self:center}
+
+.mini-die{
+  --m:20px; width:var(--m); height:var(--m); flex:none;
+  display:inline-grid; grid-template:repeat(3,1fr)/repeat(3,1fr); padding:calc(var(--m) * .1);
+  background:#fff; border:1.5px solid #d9cdb8; border-radius:24%; box-shadow:0 1px 0 #d9cdb8;
+}
+.mini-die i{border-radius:50%;margin:12%}
+.mini-die i.on{background:#3b3029}
+.mini-die[data-v="1"] i.on{background:#d8342a;margin:-4%}
+
+/* ---------- ロビー ---------- */
+.screen{min-height:100vh;min-height:100dvh}
+.center{display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.card{
+  width:100%; max-width:400px; padding:28px 22px;
+  display:flex; flex-direction:column; gap:12px;
+  background:var(--paper); border-radius:24px;
+  box-shadow:0 10px 30px rgba(80,60,30,.15), 0 2px 0 var(--line);
+}
+.logo{text-align:center;margin-bottom:4px}
+.logo-dice{display:flex;justify-content:center;gap:7px;margin-bottom:12px}
+.logo-dice .mini-die{--m:34px}
+.logo-dice .mini-die:nth-child(1){transform:rotate(-10deg)}
+.logo-dice .mini-die:nth-child(2){transform:rotate(6deg) translateY(-4px)}
+.logo-dice .mini-die:nth-child(4){transform:rotate(-5deg) translateY(-3px)}
+.logo-dice .mini-die:nth-child(5){transform:rotate(9deg)}
+h1{font-size:44px;margin:0;letter-spacing:.12em;font-weight:800}
+.sub{margin:2px 0 0;color:var(--muted);font-size:14px}
+.field span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px;font-weight:700}
+.field input,.join input{
+  width:100%; padding:12px 14px; font-size:17px; outline:none;
+  border:2px solid var(--line); border-radius:12px; background:#fff; color:var(--ink);
+}
+.field input:focus,.join input:focus{border-color:var(--gold)}
+.join{display:flex;gap:8px}
+.join input{flex:1;min-width:0;letter-spacing:.25em;text-align:center;font-weight:800}
+.join .btn{flex:none;width:92px}
+.divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:2px 0}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.msg{min-height:1.2em;color:var(--p0);font-size:14px;text-align:center;margin:0;font-weight:700}
+.howto{font-size:12.5px;color:var(--muted);line-height:1.7;margin:0;text-align:center}
+
+/* ---------- 待機 ---------- */
+.code-label{text-align:center;color:var(--muted);font-size:13px;font-weight:700}
+.code-big{font-size:64px;font-weight:800;letter-spacing:.18em;padding-left:.18em;text-align:center;color:var(--p0);line-height:1.1}
+.wait-row{display:flex;gap:10px;align-items:center;justify-content:center;font-size:14px}
+.spinner{width:18px;height:18px;flex:none;border-radius:50%;border:3px solid var(--line);border-top-color:var(--gold);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- ゲーム：上部バー ---------- */
+.topbar{
+  position:sticky; top:0; z-index:30;
+  display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto; gap:8px; align-items:center;
+  padding:8px 10px; padding-top:calc(8px + env(safe-area-inset-top));
+  background:rgba(239,230,210,.93); backdrop-filter:blur(8px); border-bottom:1px solid var(--line);
+}
+.chip{
+  position:relative; min-width:0; display:flex; align-items:center; gap:8px;
+  padding:6px 10px; background:#fff; border:2px solid var(--line); border-radius:14px;
+  transition:border-color .2s, box-shadow .2s;
+}
+.chip.c1{flex-direction:row-reverse;text-align:right}
+.chip .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.chip.c0 .dot{background:var(--p0)}
+.chip.c1 .dot{background:var(--p1)}
+.chip-info{min-width:0;flex:1}
+.chip-name{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip-sub{font-size:10.5px;color:var(--muted);line-height:1.2;min-height:1.2em}
+.chip-score{font-weight:800;font-size:22px;flex:none}
+.chip.c0 .chip-score{color:var(--p0)}
+.chip.c1 .chip-score{color:var(--p1)}
+.chip.cur.c0{border-color:var(--p0);box-shadow:0 0 0 3px var(--p0s)}
+.chip.cur.c1{border-color:var(--p1);box-shadow:0 0 0 3px var(--p1s)}
+.round{text-align:center;line-height:1.15}
+.round small{display:block;font-size:10px;color:var(--muted);font-weight:700}
+.round b{font-size:16px}
+.icon-btn{width:40px;height:40px;border-radius:12px;border:2px solid var(--line);background:#fff;cursor:pointer;font-size:17px}
+.bubble{
+  position:absolute; top:calc(100% + 8px); left:50%; z-index:5; pointer-events:none;
+  padding:4px 10px; font-size:26px; background:#fff; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.18);
+  transform:translateX(-50%) scale(0); transition:transform .2s cubic-bezier(.3,1.6,.5,1);
+}
+.bubble::before{content:"";position:absolute;top:-6px;left:50%;margin-left:-6px;border:6px solid transparent;border-top:0;border-bottom-color:#fff}
+.bubble.show{transform:translateX(-50%) scale(1)}
+.banner{margin:10px 12px 0;padding:10px 14px;border-radius:12px;background:#fff3cd;color:#7a5a00;font-size:13px;font-weight:700;text-align:center}
+
+/* ---------- スコア表 ---------- */
+.layout{max-width:1000px;margin:0 auto;padding:12px 12px calc(var(--tray-h,250px) + 20px)}
+.sheet{
+  width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0;
+  background:var(--paper); border-radius:16px; overflow:hidden;
+  box-shadow:0 6px 20px rgba(80,60,30,.12), 0 2px 0 var(--line);
+}
+.sheet col.c-cat{width:46%}
+.sheet th,.sheet td{height:40px;padding:0 10px;border-bottom:1px solid var(--line)}
+.sheet thead th{height:46px;font-size:14px;background:#fff}
+.sheet thead th.ph{text-align:center;border-bottom:3px solid}
+.sheet thead th.c0{color:var(--p0);border-bottom-color:var(--p0)}
+.sheet thead th.c1{color:var(--p1);border-bottom-color:var(--p1)}
+.ph-name{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:800}
+.you{display:block;font-size:10px;color:var(--muted);font-weight:700;line-height:1}
+.corner{text-align:left;color:var(--muted);font-size:12px}
+.sheet tbody th{text-align:left;font-weight:700;font-size:14.5px}
+.cat-row{display:flex;align-items:center;gap:8px}
+.cat-name{display:block}
+.cat-desc{display:block;font-size:10.5px;color:var(--muted);font-weight:400;line-height:1.25}
+.sheet td{text-align:center;font-weight:800;font-size:19px;border-left:1px solid var(--line);transition:background .15s}
+.sheet td.cur.c0{background:rgba(224,89,61,.06)}
+.sheet td.cur.c1{background:rgba(45,127,182,.06)}
+.sheet td.preview{color:#c7bba9;font-weight:700;font-size:17px}
+.sheet td.preview.pickable{color:var(--gold-d);cursor:pointer;background:rgba(240,180,41,.13)}
+.sheet td.preview.pickable.zero{color:#cdbfab}
+@media (hover:hover){.sheet td.preview.pickable:hover{background:rgba(240,180,41,.3)}}
+.sheet td.last{background:rgba(240,180,41,.22)}
+.sheet td.preview.selected{background:var(--gold);color:#fff;box-shadow:inset 0 0 0 2px #d99a00}
+.sheet td.pop{animation:flash 1.4s ease-out}
+.sheet td.pop .n{display:inline-block;animation:pop .5s cubic-bezier(.3,1.6,.5,1)}
+.sheet tr.sub th,.sheet tr.sub td{height:30px;background:#f7f0e1;font-size:12.5px}
+.sheet tr.sub td{font-size:14px}
+.sheet tr.sub small{color:var(--muted);font-weight:700;font-size:10.5px}
+.sheet tr.sub th small{margin-left:4px;font-weight:400}
+.got{color:#1f8a4c}
+.sheet tfoot th,.sheet tfoot td{height:52px;border-top:3px double var(--line);border-bottom:none;background:#fff}
+.sheet tfoot th{font-size:15px}
+.sheet tfoot td{font-size:24px}
+.sheet tfoot td.c0{color:var(--p0)}
+.sheet tfoot td.c1{color:var(--p1)}
+@keyframes flash{0%{background:var(--gold)}}
+@keyframes pop{0%{transform:scale(.3)}100%{transform:scale(1)}}
+
+/* ---------- サイコロ台 ---------- */
+.tray{
+  position:fixed; left:0; right:0; bottom:0; z-index:25; color:#fff;
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  background:radial-gradient(120% 140% at 50% 0%, #2a7a5d 0%, var(--felt) 45%, var(--felt-d) 100%);
+  border-top:4px solid var(--wood); border-radius:22px 22px 0 0;
+  box-shadow:0 -8px 24px rgba(0,0,0,.18);
+}
+.tray-inner{max-width:520px;margin:0 auto}
+.turn{display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px}
+.turn-title{font-weight:800;font-size:17px}
+.turn-title::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:1px;background:#fff}
+.turn.c0 .turn-title::before{background:#ff8a70}
+.turn.c1 .turn-title::before{background:#6bb8ec}
+.turn-hint{font-size:12px;opacity:.8}
+.dice-row{display:flex;justify-content:center;gap:10px;padding:14px 0 30px}
+.die{
+  width:var(--ds); height:var(--ds); padding:calc(var(--ds) * .1); position:relative; cursor:pointer; border:none;
+  display:grid; grid-template:repeat(3,1fr)/repeat(3,1fr);
+  background:linear-gradient(150deg,#fff 0%,#f1ebe0 100%); border-radius:24%;
+  box-shadow:0 4px 0 #cbbfad, 0 8px 14px rgba(0,0,0,.28);
+  transition:transform .15s, box-shadow .15s;
+}
+.die i{border-radius:50%;margin:13%}
+.die i.on{background:radial-gradient(circle at 35% 35%, #4a3f38, #1f1a17)}
+.die[data-v="1"] i.on{background:radial-gradient(circle at 35% 35%, #ef4d42, #b3211a);margin:-8%}
+.die:disabled{cursor:default}
+.die.blank{background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 2px rgba(255,255,255,.22)}
+.die.held{transform:translateY(-8px);box-shadow:0 0 0 3px var(--gold), 0 4px 0 #cbbfad, 0 12px 18px rgba(0,0,0,.35)}
+.die.held::after{
+  content:"キープ"; position:absolute; left:50%; top:calc(100% + 8px); transform:translateX(-50%);
+  padding:1px 8px; font-size:11px; font-weight:800; white-space:nowrap;
+  color:#2a1f00; background:var(--gold); border-radius:999px;
+}
+.die.rolling{animation:shake .14s linear infinite}
+@keyframes shake{
+  0%{transform:rotate(-14deg) translate(-2px,-5px)}
+  50%{transform:rotate(12deg) translate(2px,2px)}
+  100%{transform:rotate(-14deg) translate(-2px,-5px)}
+}
+.controls{display:flex;gap:10px}
+.controls .btn{flex:1;min-height:54px}
+.btn-roll{flex-direction:column;gap:3px;line-height:1.1;font-size:17px;background:var(--gold);color:#3a2a00}
+.btn-roll:disabled{background:rgba(255,255,255,.14);color:rgba(255,255,255,.55);box-shadow:none}
+.dots{display:flex;gap:4px}
+.dots i{width:7px;height:7px;border-radius:50%;background:rgba(0,0,0,.2)}
+.dots i.on{background:#3a2a00}
+.btn-roll:disabled .dots i{background:rgba(255,255,255,.15)}
+.btn-roll:disabled .dots i.on{background:rgba(255,255,255,.6)}
+.btn-confirm{flex-direction:column;gap:0;line-height:1.3;font-size:15px;background:#fff;color:var(--felt-d)}
+.btn-confirm small{font-size:11px;opacity:.7}
+.btn-confirm.zero{background:#ffe9e3;color:#a33a22}
+.stamps{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.stamps button{width:38px;height:34px;border:none;border-radius:10px;background:rgba(255,255,255,.12);font-size:18px;cursor:pointer;transition:transform .1s}
+.stamps button:active{transform:scale(.88)}
+.stamps button:disabled{opacity:.4}
+
+@media (min-width:820px){
+  :root{--ds:60px}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;align-items:start;padding:20px}
+  .tray{position:sticky;top:84px;border:4px solid var(--wood);border-radius:22px;padding:18px}
+}
+@media (max-width:370px){
+  :root{--ds:48px}
+  .dice-row{gap:8px}
+  .chip{padding:5px 7px;gap:6px}
+  .chip-score{font-size:19px}
+}
+
+/* ---------- トースト・モーダル・演出 ---------- */
+.toast{
+  position:fixed; left:50%; top:calc(72px + env(safe-area-inset-top)); z-index:60; pointer-events:none;
+  max-width:calc(100% - 32px); padding:10px 18px; text-align:center;
+  font-weight:700; font-size:14px; color:#fff; background:rgba(40,32,26,.92); border-radius:999px;
+  opacity:0; transform:translate(-50%,-16px); transition:opacity .25s, transform .25s;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.modal{
+  position:fixed; inset:0; z-index:70; padding:16px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(30,22,15,.5); opacity:0; pointer-events:none; transition:opacity .2s;
+}
+.modal.open{opacity:1;pointer-events:auto}
+.modal-card{
+  width:100%; max-width:420px; max-height:calc(100dvh - 32px); overflow:auto;
+  display:flex; flex-direction:column; gap:10px; padding:24px 20px;
+  background:var(--paper); border-radius:22px; transform:scale(.95); transition:transform .2s;
+}
+.modal.open .modal-card{transform:none}
+.modal h2{margin:0 0 4px;text-align:center;font-size:24px}
+.menu-code{text-align:center;margin:0 0 4px;color:var(--muted);font-size:14px}
+.menu-code b{color:var(--ink);font-size:20px;letter-spacing:.12em}
+.res-scores{display:flex;align-items:center;gap:10px;margin:14px 0 4px}
+.res-p{flex:1;min-width:0;position:relative;text-align:center;padding:14px 8px;background:#fff;border:3px solid var(--line);border-radius:16px}
+.res-p.c0.win{border-color:var(--p0)}
+.res-p.c1.win{border-color:var(--p1)}
+.res-name{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-total{font-size:40px;font-weight:800;line-height:1.1}
+.res-p.c0 .res-total{color:var(--p0)}
+.res-p.c1 .res-total{color:var(--p1)}
+.crown{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:26px}
+.res-vs{color:var(--muted);font-weight:800}
+.res-tally{text-align:center;font-size:13px;color:var(--muted);margin:0 0 6px}
+.rules ol{margin:0;padding-left:1.3em;font-size:14px;line-height:1.7}
+.rules table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+.rules th,.rules td{border-bottom:1px solid var(--line);padding:7px 4px;text-align:left;vertical-align:top}
+.rules th{white-space:nowrap;padding-right:10px}
+.rules .note{font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.6}
+kbd{display:inline-block;padding:0 5px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:#fff;font-size:11px;font-family:inherit}
+.confetti{position:fixed;inset:0;z-index:80;pointer-events:none;overflow:hidden}
+.confetti i{position:absolute;top:-20px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translate(var(--dx),110vh) rotate(var(--r))}}
+.callout{
+  position:fixed; left:50%; top:40%; z-index:75; pointer-events:none; white-space:nowrap;
+  font-size:64px; font-weight:800; color:var(--gold);
+  text-shadow:0 4px 0 var(--wood), 0 10px 30px rgba(0,0,0,.35);
+  animation:callout 1.9s ease-out forwards;
+}
+@keyframes callout{
+  0%{transform:translate(-50%,-50%) scale(.3);opacity:0}
+  15%{transform:translate(-50%,-50%) scale(1.15);opacity:1}
+  30%{transform:translate(-50%,-50%) scale(1)}
+  80%{opacity:1}
+  100%{transform:translate(-50%,-62%) scale(1);opacity:0}
+}
+.float-stamp{position:fixed;top:42%;z-index:74;font-size:72px;pointer-events:none;animation:floatUp 1.5s ease-out forwards}
+.float-stamp.c0{left:30%}
+.float-stamp.c1{left:70%}
+@keyframes floatUp{
+  0%{opacity:0;transform:translate(-50%,30px) scale(.5)}
+  20%{opacity:1;transform:translate(-50%,0) scale(1.1)}
+  100%{opacity:0;transform:translate(-50%,-120px) scale(1)}
+}
+</style>
+</head>
+<body>
+
+<!-- ロビー -->
+<section id="lobby" class="screen center">
+  <div class="card">
+    <div class="logo">
+      <div class="logo-dice" id="logoDice"></div>
+      <h1>ヨット</h1>
+      <p class="sub">ふたりでオンライン対戦</p>
+    </div>
+    <label class="field"><span>あなたの名前</span><input id="nameInput" maxlength="10" placeholder="なまえ" autocomplete="off"></label>
+    <button id="resumeBtn" class="btn btn-gold" hidden></button>
+    <button id="createBtn" class="btn btn-p0">部屋をつくる</button>
+    <div class="join">
+      <input id="codeInput" inputmode="numeric" maxlength="4" placeholder="コード4桁" autocomplete="off">
+      <button id="joinBtn" class="btn btn-p1">入る</button>
+    </div>
+    <p id="lobbyMsg" class="msg"></p>
+    <p class="howto">ひとりが「部屋をつくる」→ 出てきた4桁のコードを<br>もうひとりが入力して「入る」</p>
+    <div class="divider">または</div>
+    <button id="localBtn" class="btn btn-ghost">この端末でふたりで遊ぶ</button>
+    <button class="link" data-open="rulesModal">ルールを見る</button>
+  </div>
+</section>
+
+<!-- 待機 -->
+<section id="waiting" class="screen center" hidden>
+  <div class="card">
+    <div class="code-label" id="waitLabel">部屋コード</div>
+    <div class="code-big" id="waitCode">----</div>
+    <button id="copyBtn" class="btn btn-ghost">コードをコピー</button>
+    <div class="wait-row"><span class="spinner"></span><span id="waitMsg">接続中…</span></div>
+    <p class="howto" id="waitHint"></p>
+    <button id="cancelBtn" class="link">やめる</button>
+  </div>
+</section>
+
+<!-- ゲーム -->
+<section id="game" class="screen" hidden>
+  <header class="topbar">
+    <div class="chip c0" id="chip0">
+      <span class="dot"></span>
+      <div class="chip-info"><div class="chip-name"></div><div class="chip-sub"></div></div>
+      <div class="chip-score">0</div>
+      <div class="bubble"></div>
+    </div>
+    <div class="round"><small>ラウンド</small><b id="roundInfo">1/12</b></div>
+    <div class="chip c1" id="chip1">
+      <span class="dot"></span>
+      <div class="chip-info"><div class="chip-name"></div><div class="chip-sub"></div></div>
+      <div class="chip-score">0</div>
+      <div class="bubble"></div>
+    </div>
+    <button class="icon-btn" data-open="menuModal" aria-label="メニュー">☰</button>
+  </header>
+  <div class="banner" id="banner" hidden></div>
+  <main class="layout">
+    <table class="sheet" id="sheet"></table>
+    <aside class="tray" id="tray">
+      <div class="tray-inner">
+        <div class="turn" id="turnBox"><div class="turn-title" id="turnTitle"></div><div class="turn-hint" id="turnHint"></div></div>
+        <div class="dice-row" id="diceRow"></div>
+        <div class="controls">
+          <button id="rollBtn" class="btn btn-roll"><span id="rollLabel">サイコロをふる</span><span class="dots" id="rollDots"><i></i><i></i><i></i></span></button>
+          <button id="confirmBtn" class="btn btn-confirm" hidden></button>
+          <button id="resultBtn" class="btn btn-ghost" hidden>結果を見る</button>
+          <button id="rematchBtn" class="btn btn-gold" hidden>もう一度あそぶ</button>
+        </div>
+        <div class="stamps" id="stamps"></div>
+      </div>
+    </aside>
+  </main>
+</section>
+
+<!-- 結果 -->
+<div class="modal" id="resultModal">
+  <div class="modal-card">
+    <h2 id="resTitle"></h2>
+    <div class="res-scores" id="resScores"></div>
+    <p class="res-tally" id="resTally"></p>
+    <button id="resRematch" class="btn btn-gold">もう一度あそぶ</button>
+    <button class="link" data-close>スコア表を見る</button>
+  </div>
+</div>
+
+<!-- メニュー -->
+<div class="modal" id="menuModal">
+  <div class="modal-card">
+    <h2>メニュー</h2>
+    <p class="menu-code" id="menuCode"></p>
+    <button class="btn btn-ghost" data-open="rulesModal">ルール</button>
+    <button class="btn btn-ghost" id="soundBtn">効果音：ON</button>
+    <button class="btn btn-ghost danger" id="leaveBtn">ロビーにもどる</button>
+    <button class="link" data-close>とじる</button>
+  </div>
+</div>
+
+<!-- ルール -->
+<div class="modal" id="rulesModal">
+  <div class="modal-card rules">
+    <h2>ヨットのルール</h2>
+    <ol>
+      <li>自分の番では、5個のサイコロを<b>最大3回</b>までふれます。</li>
+      <li>2回目・3回目は、のこしたいサイコロをタップして<b>キープ</b>してからふります。</li>
+      <li>ふったら（1回目・2回目で止めてもOK）、表からまだ使っていない役を1つえらんで記入。条件を満たさない役は<b>0点</b>で記入になります。</li>
+      <li>12ラウンドで全部の役を埋めて、合計点が高いほうの勝ち！</li>
+    </ol>
+    <table>
+      <tr><th>エース〜シックス</th><td>その目の合計（例：4が3個 → フォーに12点）</td></tr>
+      <tr><th>ボーナス</th><td>エース〜シックスの小計が63点以上で +35点（各目3個ずつで63点）</td></tr>
+      <tr><th>チョイス</th><td>5個の合計</td></tr>
+      <tr><th>フォーダイス</th><td>同じ目が4個以上 → 5個の合計</td></tr>
+      <tr><th>フルハウス</th><td>同じ目3個＋同じ目2個 → 5個の合計</td></tr>
+      <tr><th>S.ストレート</th><td>4つ連続した目（1234・2345・3456）→ 15点</td></tr>
+      <tr><th>B.ストレート</th><td>5つ連続した目（12345・23456）→ 30点</td></tr>
+      <tr><th>ヨット</th><td>5個ぜんぶ同じ目 → 50点</td></tr>
+    </table>
+    <p class="note">役をえらぶときは、表の数字を1回タップ → もう1回タップ（または下のボタン）で記入。<br>PCなら <kbd>Space</kbd> でふる、<kbd>1</kbd>〜<kbd>5</kbd> でキープ、<kbd>Enter</kbd> で記入。</p>
+    <button class="btn btn-ghost" data-close>とじる</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= 定数 ================= */
+const PREFIX = 'asobi-yacht-v1-';
+const PEER_OPTS = { debug: 1 };
+const STAMPS = ['👍', '😆', '😱', '😭', '🙏', '🎉', '❤️'];
+const CATS = [
+  { id: 'n1', name: 'エース',   face: 1 },
+  { id: 'n2', name: 'デュース', face: 2 },
+  { id: 'n3', name: 'トレイ',   face: 3 },
+  { id: 'n4', name: 'フォー',   face: 4 },
+  { id: 'n5', name: 'ファイブ', face: 5 },
+  { id: 'n6', name: 'シックス', face: 6 },
+  { id: 'choice', name: 'チョイス',     desc: '5個の合計' },
+  { id: 'four',   name: 'フォーダイス', desc: '同じ目4個以上 → 合計' },
+  { id: 'full',   name: 'フルハウス',   desc: '3個＋2個 → 合計' },
+  { id: 'ss',     name: 'S.ストレート', desc: '4つ連続 → 15点' },
+  { id: 'bs',     name: 'B.ストレート', desc: '5つ連続 → 30点' },
+  { id: 'yacht',  name: 'ヨット',       desc: '5個同じ → 50点' },
+];
+const UPPER = CATS.slice(0, 6);
+const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
+const FACES = [[], [4], [2, 6], [2, 4, 6], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8]];
+
+/* ================= ユーティリティ ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const cleanName = n => String(n || '').replace(/\s+/g, ' ').trim().slice(0, 10);
+function d6() {
+  const a = new Uint32Array(1);
+  do { crypto.getRandomValues(a); } while (a[0] >= 4294967292);
+  return 1 + (a[0] % 6);
+}
+let myCid = lsGet('yacht.cid');
+if (!myCid) { myCid = Math.random().toString(36).slice(2) + Date.now().toString(36); lsSet('yacht.cid', myCid); }
+
+/* ================= 得点計算 ================= */
+function scoreFor(cat, d) {
+  if (!d || !d[0]) return 0;
+  const c = [0, 0, 0, 0, 0, 0, 0];
+  let sum = 0;
+  for (const v of d) { c[v]++; sum += v; }
+  const run = (a, b) => { for (let v = a; v <= b; v++) if (!c[v]) return false; return true; };
+  if (cat.face) return c[cat.face] * cat.face;
+  switch (cat.id) {
+    case 'choice': return sum;
+    case 'four':   return c.some(n => n >= 4) ? sum : 0;
+    case 'full':   return c.includes(3) && c.includes(2) ? sum : 0;
+    case 'ss':     return run(1, 4) || run(2, 5) || run(3, 6) ? 15 : 0;
+    case 'bs':     return run(1, 5) || run(2, 6) ? 30 : 0;
+    case 'yacht':  return c.includes(5) ? 50 : 0;
+  }
+  return 0;
+}
+const upperSum = p => UPPER.reduce((a, c) => a + (p.scores[c.id] || 0), 0);
+const bonusOf = p => upperSum(p) >= 63 ? 35 : 0;
+const totalOf = p => CATS.reduce((a, c) => a + (p.scores[c.id] || 0), 0) + bonusOf(p);
+const filled = p => CATS.filter(c => p.scores[c.id] !== null).length;
+const emptyScores = () => Object.fromEntries(CATS.map(c => [c.id, null]));
+
+/* ================= ゲーム状態（ホストが正） ================= */
+function newState(name0) {
+  return {
+    players: [{ name: name0, cid: null, scores: emptyScores() }, { name: '', cid: null, scores: emptyScores() }],
+    phase: 'waiting', current: 0, starter: 0, gameNo: 0,
+    dice: [0, 0, 0, 0, 0], held: [false, false, false, false, false],
+    rollsLeft: 3, rollId: 0, turnId: 0, last: null, wins: [0, 0], draws: 0,
+  };
+}
+function newTurn(s) {
+  s.dice = [0, 0, 0, 0, 0];
+  s.held = [false, false, false, false, false];
+  s.rollsLeft = 3;
+  s.turnId++;
+}
+function startGame(s) {
+  s.players.forEach(p => { p.scores = emptyScores(); });
+  s.starter = s.gameNo === 0 ? (d6() <= 3 ? 0 : 1) : 1 - s.starter;
+  s.gameNo++;
+  s.current = s.starter;
+  s.phase = 'playing';
+  s.last = null;
+  newTurn(s);
+}
+function applyAction(s, actor, a) {
+  if (!a || typeof a !== 'object') return null;
+  if (a.type === 'stamp') return STAMPS.includes(a.s) ? { ev: { t: 'stamp', p: actor, s: a.s } } : null;
+  if (a.type === 'rematch') {
+    if (s.phase !== 'finished') return null;
+    startGame(s);
+    return { changed: true, ev: { t: 'start' } };
+  }
+  if (s.phase !== 'playing' || actor !== s.current) return null;
+  switch (a.type) {
+    case 'roll': {
+      if (s.rollsLeft <= 0) return null;
+      const first = s.rollsLeft === 3;
+      if (!first && s.held.every(Boolean)) return null;
+      if (first) s.held = [false, false, false, false, false];
+      s.dice = s.dice.map((v, i) => (!first && s.held[i]) ? v : d6());
+      s.rollsLeft--;
+      s.rollId++;
+      return { changed: true };
+    }
+    case 'hold': {
+      if (!Number.isInteger(a.i) || a.i < 0 || a.i > 4 || s.rollsLeft === 3 || s.rollsLeft === 0) return null;
+      s.held[a.i] = !!a.v;
+      return { changed: true };
+    }
+    case 'score': {
+      const cat = CAT[a.cat], p = s.players[actor];
+      if (!cat || s.rollsLeft === 3 || p.scores[cat.id] !== null) return null;
+      const pts = scoreFor(cat, s.dice);
+      p.scores[cat.id] = pts;
+      s.last = { p: actor, cat: cat.id, key: s.gameNo + '-' + s.turnId };
+      if (s.players.every(pl => filled(pl) === CATS.length)) {
+        s.phase = 'finished';
+        const t0 = totalOf(s.players[0]), t1 = totalOf(s.players[1]);
+        if (t0 === t1) s.draws++; else s.wins[t0 > t1 ? 0 : 1]++;
+      } else {
+        const other = 1 - actor;
+        s.current = filled(s.players[other]) < CATS.length ? other : actor;
+        newTurn(s);
+      }
+      return { changed: true, ev: { t: 'scored', p: actor, cat: cat.id, pts } };
+    }
+  }
+  return null;
+}
+
+/* ================= 効果音 ================= */
+const sfx = {
+  ctx: null,
+  on: lsGet('yacht.sound') !== '0',
+  init() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) try { this.ctx = new AC(); } catch (e) {}
+    }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+  },
+  ok() { return this.on && this.ctx && this.ctx.state === 'running'; },
+  tone(f, t, dur, type = 'sine', vol = .12) {
+    const c = this.ctx, o = c.createOscillator(), g = c.createGain(), t0 = c.currentTime + t;
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + .01);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(t0); o.stop(t0 + dur + .05);
+  },
+  knock(t, vol) {
+    const c = this.ctx, len = Math.floor(c.sampleRate * .03), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+    const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    src.buffer = buf; f.type = 'bandpass'; f.frequency.value = 1600 + Math.random() * 1600; f.Q.value = 1.2; g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(c.destination);
+    src.start(c.currentTime + t);
+  },
+  roll()    { if (this.ok()) for (let i = 0; i < 9; i++) this.knock(Math.random() * .55, .12 + Math.random() * .12); },
+  land()    { if (this.ok()) { this.knock(0, .3); this.knock(.05, .2); } },
+  score()   { if (this.ok()) { this.tone(660, 0, .12, 'triangle'); this.tone(990, .08, .2, 'triangle'); } },
+  turn()    { if (this.ok()) { this.tone(523, 0, .15); this.tone(784, .12, .28); } },
+  fanfare() { if (this.ok()) [523, 659, 784, 1047].forEach((f, i) => this.tone(f, i * .11, .32, 'triangle', .14)); },
+};
+document.addEventListener('pointerdown', () => sfx.init(), { passive: true });
+document.addEventListener('keydown', () => sfx.init());
+
+/* ================= 画面・UI状態 ================= */
+let state = null;
+let screen = 'lobby';
+let pick = null, pickKey = '';
+let shownRollId = null, animating = false, animSet = [], animTick = 0, animEnd = 0;
+let poppedKey = '', resultShownFor = -1, lastTurnKey = '';
+let busy = false, busyT = 0, wasLost = false, lastStamp = 0;
+
+const net = {
+  mode: null,        // 'host' | 'guest' | 'local'
+  me: 0, code: '', peer: null, peerReady: false, conn: null, pending: null,
+  gen: 0, retryT: 0, lastSeen: 0, lastRecon: 0, resume: false,
+};
+
+function showScreen(name) {
+  screen = name;
+  ['lobby', 'waiting', 'game'].forEach(n => { $('#' + n).hidden = n !== name; });
+  if (name === 'game') updateTrayHeight();
+}
+function viewer() { return net.mode === 'local' ? state.current : net.me; }
+function who(i) {
+  if (net.mode !== 'local' && i === viewer()) return 'あなた';
+  const n = state.players[i].name || 'あいて';
+  return net.mode === 'local' ? n : n + 'さん';
+}
+function connOk() { return net.mode !== 'guest' || !!(net.conn && net.conn.open); }
+function canAct() { return !!state && state.phase === 'playing' && state.current === viewer() && !animating && !busy && connOk(); }
+function canHold() { return canAct() && state.rollsLeft > 0 && state.rollsLeft < 3; }
+function canRoll() { return canAct() && state.rollsLeft > 0 && !(state.rollsLeft < 3 && state.held.every(Boolean)); }
+function canPick() { return canAct() && state.rollsLeft < 3; }
+
+/* ---------- サイコロ要素 ---------- */
+const miniDie = v => `<span class="mini-die" data-v="${v}">${Array.from({ length: 9 }, (_, k) => `<i${FACES[v].includes(k) ? ' class="on"' : ''}></i>`).join('')}</span>`;
+$('#logoDice').innerHTML = [6, 6, 6, 6, 6].map(miniDie).join('');
+const diceEls = [];
+for (let i = 0; i < 5; i++) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'die blank';
+  b.setAttribute('aria-label', `サイコロ${i + 1}`);
+  b.innerHTML = '<i></i>'.repeat(9);
+  b.addEventListener('click', () => toggleHold(i));
+  $('#diceRow').appendChild(b);
+  diceEls.push(b);
+}
+function setFace(el, v) {
+  if (el._v === v) return;
+  el._v = v;
+  el.dataset.v = v;
+  const on = FACES[v] || [];
+  [...el.children].forEach((p, k) => p.classList.toggle('on', on.includes(k)));
+}
+$('#stamps').innerHTML = STAMPS.map(s => `<button type="button" data-stamp="${s}">${s}</button>`).join('');
+
+/* ================= 描画 ================= */
+function render() {
+  if (!state || screen !== 'game') return;
+  const s = state;
+  const key = s.turnId + ':' + s.rollId;
+  if (key !== pickKey) { pickKey = key; pick = null; }
+  if (shownRollId === null) shownRollId = s.rollId;
+  if (s.rollId !== shownRollId) { shownRollId = s.rollId; startRollAnim(); }
+  if (pick && !canPick()) pick = null;
+
+  renderTop();
+  renderDice();
+  renderSheet();
+  renderControls();
+  renderBanner();
+
+  const tk = s.phase + ':' + s.gameNo + ':' + s.turnId;
+  if (tk !== lastTurnKey) {
+    const first = lastTurnKey === '';
+    lastTurnKey = tk;
+    if (!first && s.phase === 'playing' && net.mode !== 'local' && s.current === viewer()) {
+      sfx.turn();
+      if (document.hidden) document.title = '🎲 あなたの番！';
+    }
+  }
+  if (s.phase === 'finished' && resultShownFor !== s.gameNo) {
+    resultShownFor = s.gameNo;
+    setTimeout(showResult, 900);
+  }
+}
+
+function renderTop() {
+  const s = state, me = viewer();
+  [0, 1].forEach(i => {
+    const chip = $('#chip' + i), p = s.players[i];
+    chip.querySelector('.chip-name').textContent = p.name || '…';
+    chip.querySelector('.chip-score').textContent = totalOf(p);
+    const tags = [];
+    if (net.mode !== 'local' && i === me) tags.push('あなた');
+    if (s.gameNo > 1 || s.wins[i] > 0) tags.push(s.wins[i] + '勝');
+    chip.querySelector('.chip-sub').textContent = tags.join('・');
+    chip.classList.toggle('cur', s.phase === 'playing' && s.current === i);
+  });
+  $('#roundInfo').textContent = s.phase === 'finished' ? '終了'
+    : s.phase === 'waiting' ? '-' : Math.min(12, filled(s.players[s.current]) + 1) + '/12';
+}
+
+function renderDice() {
+  const s = state, hold = canHold();
+  diceEls.forEach((el, i) => {
+    const rolling = animating && animSet.includes(i);
+    if (!rolling) setFace(el, s.dice[i]);
+    el.classList.toggle('blank', !s.dice[i] && !rolling);
+    el.classList.toggle('held', !!s.held[i] && s.rollsLeft < 3 && !!s.dice[i]);
+    el.disabled = !hold;
+  });
+}
+
+function renderSheet() {
+  const s = state, me = viewer(), cur = s.current;
+  const preview = s.phase === 'playing' && s.rollsLeft < 3 && !animating;
+  const pickable = canPick();
+  const lastKey = s.last ? s.last.key : '';
+  const doPop = lastKey && lastKey !== poppedKey;
+  const cell = (i, cat) => {
+    const v = s.players[i].scores[cat.id];
+    let cls = 'c' + i + (s.phase === 'playing' && i === cur ? ' cur' : '');
+    if (v !== null) {
+      const isLast = s.last && s.last.p === i && s.last.cat === cat.id;
+      if (isLast) cls += ' last' + (doPop ? ' pop' : '');
+      return `<td class="filled ${cls}"><span class="n">${v}</span></td>`;
+    }
+    if (preview && i === cur) {
+      const pv = scoreFor(cat, s.dice);
+      cls += ' preview' + (pv === 0 ? ' zero' : '') + (pickable ? ' pickable' : '') + (pick === cat.id ? ' selected' : '');
+      return `<td class="${cls}"${pickable ? ` data-pick="${cat.id}"` : ''}>${pv}</td>`;
+    }
+    return `<td class="${cls}"></td>`;
+  };
+  let h = '<colgroup><col class="c-cat"><col><col></colgroup><thead><tr><th class="corner">役</th>';
+  for (let i = 0; i < 2; i++) {
+    h += `<th class="ph c${i}"><span class="ph-name">${esc(s.players[i].name || '…')}</span>${net.mode !== 'local' && i === me ? '<span class="you">あなた</span>' : ''}</th>`;
+  }
+  h += '</tr></thead><tbody>';
+  CATS.forEach((cat, idx) => {
+    const label = cat.face
+      ? `<span class="cat-row">${miniDie(cat.face)}<span class="cat-name">${cat.name}</span></span>`
+      : `<span class="cat-name">${cat.name}</span><span class="cat-desc">${cat.desc}</span>`;
+    h += `<tr><th>${label}</th>${cell(0, cat)}${cell(1, cat)}</tr>`;
+    if (idx === 5) {
+      h += '<tr class="sub"><th>小計</th>' + [0, 1].map(i => `<td>${upperSum(s.players[i])}<small>/63</small></td>`).join('') + '</tr>';
+      h += '<tr class="sub"><th>ボーナス<small>63点以上で+35</small></th>' + [0, 1].map(i => {
+        const p = s.players[i], u = upperSum(p), done = UPPER.every(c => p.scores[c.id] !== null);
+        return `<td>${u >= 63 ? '<b class="got">+35</b>' : done ? '0' : `<small>あと${63 - u}</small>`}</td>`;
+      }).join('') + '</tr>';
+    }
+  });
+  h += '</tbody><tfoot><tr><th>合計</th>' + [0, 1].map(i => `<td class="c${i}">${totalOf(s.players[i])}</td>`).join('') + '</tr></tfoot>';
+  $('#sheet').innerHTML = h;
+  if (doPop) poppedKey = lastKey;
+}
+
+function renderControls() {
+  const s = state, cur = s.current, fin = s.phase === 'finished';
+  const mine = s.phase === 'playing' && (net.mode === 'local' || cur === viewer());
+  let title = 'ゲーム終了！', hint = 'おつかれさま！';
+  if (!fin) {
+    title = who(cur) + 'の番';
+    if (mine) {
+      hint = s.rollsLeft === 3 ? 'サイコロをふってね'
+        : s.rollsLeft > 0 ? 'のこすサイコロをタップ → ふり直す／表から役をえらぶ'
+        : '表から記入する役をえらんでね';
+    } else {
+      hint = s.rollsLeft === 3 ? 'サイコロをふるのを待っています…' : `${3 - s.rollsLeft}回目をふりました`;
+    }
+  }
+  $('#turnTitle').textContent = title;
+  $('#turnHint').textContent = hint;
+  $('#turnBox').className = 'turn' + (fin ? '' : ' c' + cur);
+
+  const rollBtn = $('#rollBtn'), confirmBtn = $('#confirmBtn');
+  rollBtn.hidden = fin;
+  rollBtn.disabled = !canRoll();
+  $('#rollLabel').textContent = s.rollsLeft === 3 ? 'サイコロをふる' : s.rollsLeft > 0 ? 'もう一度ふる' : 'もうふれません';
+  [...$('#rollDots').children].forEach((d, k) => d.classList.toggle('on', k < s.rollsLeft));
+
+  const showConfirm = !fin && !!pick && canPick();
+  confirmBtn.hidden = !showConfirm;
+  if (showConfirm) {
+    const pts = scoreFor(CAT[pick], s.dice);
+    confirmBtn.innerHTML = `<span><b>${CAT[pick].name}</b>に<b>${pts}点</b></span><small>で記入する</small>`;
+    confirmBtn.classList.toggle('zero', pts === 0);
+  }
+  $('#resultBtn').hidden = !fin;
+  $('#rematchBtn').hidden = !fin;
+  $('#rematchBtn').disabled = !connOk();
+
+  $('#stamps').hidden = net.mode === 'local';
+  const stampOk = net.mode === 'host' ? !!(net.conn && net.conn.open) : connOk();
+  $('#stamps').querySelectorAll('button').forEach(b => { b.disabled = !stampOk; });
+}
+
+function renderBanner() {
+  let msg = '';
+  if (net.mode === 'guest' && !connOk()) msg = '接続が切れました。再接続しています…';
+  if (net.mode === 'host' && state.phase !== 'waiting' && !(net.conn && net.conn.open)) {
+    msg = `${state.players[1].name || '相手'}さんの接続が切れています。同じコード【${net.code}】で「入る」を押せばつづきから遊べます`;
+  }
+  const b = $('#banner');
+  b.textContent = msg;
+  b.hidden = !msg;
+}
+
+function startRollAnim() {
+  const s = state;
+  animSet = [0, 1, 2, 3, 4].filter(i => !s.held[i]);
+  animating = true;
+  sfx.roll();
+  animSet.forEach(i => diceEls[i].classList.add('rolling'));
+  clearInterval(animTick);
+  clearTimeout(animEnd);
+  animTick = setInterval(() => animSet.forEach(i => setFace(diceEls[i], 1 + Math.floor(Math.random() * 6))), 70);
+  animEnd = setTimeout(() => {
+    clearInterval(animTick);
+    animating = false;
+    animSet.forEach(i => diceEls[i].classList.remove('rolling'));
+    sfx.land();
+    render();
+  }, 650);
+}
+function stopAnim() {
+  clearInterval(animTick);
+  clearTimeout(animEnd);
+  animating = false;
+  diceEls.forEach(el => el.classList.remove('rolling'));
+}
+
+/* ---------- イベント（トースト・スタンプ・演出） ---------- */
+function handleEvent(e) {
+  if (!state || !e) return;
+  if (e.t === 'stamp') showStamp(e.p, e.s);
+  if (e.t === 'start') toast(who(state.starter) + 'の先攻！');
+  if (e.t === 'scored') {
+    const cat = CAT[e.cat];
+    if (!cat) return;
+    toast(`${who(e.p)}：${cat.name} ${e.pts}点`);
+    if (e.cat === 'yacht' && e.pts > 0) { callout('ヨット！'); confetti(); sfx.fanfare(); }
+    else sfx.score();
+  }
+}
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2300);
+}
+function showStamp(p, s) {
+  const b = $('#chip' + p).querySelector('.bubble');
+  b.textContent = s;
+  b.classList.remove('show');
+  void b.offsetWidth;
+  b.classList.add('show');
+  clearTimeout(b._t);
+  b._t = setTimeout(() => b.classList.remove('show'), 2400);
+  const f = document.createElement('div');
+  f.className = 'float-stamp c' + p;
+  f.textContent = s;
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 1600);
+}
+function callout(text) {
+  const el = document.createElement('div');
+  el.className = 'callout';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+function confetti(n = 70) {
+  const box = document.createElement('div');
+  box.className = 'confetti';
+  const colors = ['#e0593d', '#2d7fb6', '#f0b429', '#21a366', '#9b5de5', '#ff8fab'];
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('i');
+    c.style.left = Math.random() * 100 + '%';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDelay = Math.random() * .6 + 's';
+    c.style.animationDuration = 1.8 + Math.random() * 1.5 + 's';
+    c.style.setProperty('--dx', Math.random() * 200 - 100 + 'px');
+    c.style.setProperty('--r', Math.random() * 1080 - 540 + 'deg');
+    box.appendChild(c);
+  }
+  document.body.appendChild(box);
+  setTimeout(() => box.remove(), 4500);
+}
+function showResult() {
+  if (!state || state.phase !== 'finished' || screen !== 'game') return;
+  const s = state, t = [totalOf(s.players[0]), totalOf(s.players[1])];
+  const win = t[0] === t[1] ? -1 : t[0] > t[1] ? 0 : 1;
+  $('#resTitle').textContent = win < 0 ? '引き分け！' : who(win) + 'の勝ち！';
+  $('#resScores').innerHTML = [0, 1].map(i =>
+    `<div class="res-p c${i}${i === win ? ' win' : ''}">${i === win ? '<div class="crown">👑</div>' : ''}<div class="res-name">${esc(s.players[i].name)}</div><div class="res-total">${t[i]}</div></div>`
+  ).join('<div class="res-vs">vs</div>');
+  $('#resTally').textContent = `通算：${s.players[0].name} ${s.wins[0]}勝 ／ ${s.players[1].name} ${s.wins[1]}勝` + (s.draws ? ` ／ 引き分け ${s.draws}` : '');
+  $('#resRematch').disabled = !connOk();
+  openModal('resultModal');
+  if (win >= 0 && (net.mode === 'local' || win === viewer())) { confetti(); sfx.fanfare(); }
+  else sfx.score();
+}
+
+/* ---------- モーダル ---------- */
+function openModal(id) {
+  if (id === 'menuModal') {
+    $('#menuCode').innerHTML = net.mode === 'local' ? 'この端末でふたりプレイ中' : `部屋コード <b>${esc(net.code)}</b>`;
+    $('#soundBtn').textContent = '効果音：' + (sfx.on ? 'ON' : 'OFF');
+  }
+  $('#' + id).classList.add('open');
+}
+function closeModals() { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); }
+document.addEventListener('click', e => {
+  const o = e.target.closest('[data-open]');
+  if (o) { closeModals(); openModal(o.dataset.open); return; }
+  if (e.target.closest('[data-close]') || e.target.classList.contains('modal')) closeModals();
+});
+
+/* ================= 操作 ================= */
+function dispatch(a) {
+  if (!state) return;
+  if (net.mode === 'guest') {
+    if (!connOk()) return;
+    if (a.type === 'hold') { state.held[a.i] = a.v; render(); }
+    if (a.type === 'roll' || a.type === 'score' || a.type === 'rematch') {
+      busy = true;
+      clearTimeout(busyT);
+      busyT = setTimeout(() => { busy = false; render(); }, 4000);
+      render();
+    }
+    try { net.conn.send({ t: 'act', a }); } catch (e) {}
+    return;
+  }
+  const actor = net.mode === 'local' ? state.current : 0;
+  commit(applyAction(state, actor, a));
+}
+function commit(res) {
+  if (!res) return;
+  if (res.changed) {
+    if (net.mode === 'host') { saveHost(); send({ t: 'state', s: state }); }
+    render();
+  }
+  if (res.ev) {
+    if (net.mode === 'host') send({ t: 'event', e: res.ev });
+    handleEvent(res.ev);
+  }
+}
+function send(msg) {
+  const c = net.conn;
+  if (c && c.open) try { c.send(msg); } catch (e) {}
+}
+function toggleHold(i) {
+  if (!canHold() || !state.dice[i]) return;
+  dispatch({ type: 'hold', i, v: !state.held[i] });
+}
+function roll() {
+  if (!canRoll()) return;
+  pick = null;
+  dispatch({ type: 'roll' });
+}
+function selectCat(id) {
+  if (!canPick() || state.players[state.current].scores[id] !== null) return;
+  if (pick === id) { confirmPick(); return; }
+  pick = id;
+  render();
+}
+function confirmPick() {
+  if (!pick || !canPick()) return;
+  const id = pick;
+  pick = null;
+  dispatch({ type: 'score', cat: id });
+}
+function rematch() {
+  closeModals();
+  if (state && state.phase === 'finished') dispatch({ type: 'rematch' });
+}
+
+$('#rollBtn').addEventListener('click', roll);
+$('#confirmBtn').addEventListener('click', confirmPick);
+$('#rematchBtn').addEventListener('click', rematch);
+$('#resRematch').addEventListener('click', rematch);
+$('#resultBtn').addEventListener('click', showResult);
+$('#sheet').addEventListener('click', e => {
+  const td = e.target.closest('td[data-pick]');
+  if (td) selectCat(td.dataset.pick);
+});
+$('#stamps').addEventListener('click', e => {
+  const b = e.target.closest('button[data-stamp]');
+  if (!b || b.disabled || Date.now() - lastStamp < 600) return;
+  lastStamp = Date.now();
+  dispatch({ type: 'stamp', s: b.dataset.stamp });
+});
+$('#soundBtn').addEventListener('click', () => {
+  sfx.on = !sfx.on;
+  lsSet('yacht.sound', sfx.on ? '1' : '0');
+  $('#soundBtn').textContent = '効果音：' + (sfx.on ? 'ON' : 'OFF');
+});
+$('#leaveBtn').addEventListener('click', () => {
+  const msg = net.mode === 'host'
+    ? 'ロビーにもどりますか？\n（「前回の部屋を再開」から続きに戻れます）'
+    : 'ロビーにもどりますか？';
+  if (confirm(msg)) leave();
+});
+document.addEventListener('keydown', e => {
+  if (screen !== 'game' || !state || document.querySelector('.modal.open')) return;
+  if (e.target.closest && e.target.closest('input, textarea')) return;
+  if (e.key === ' ') { e.preventDefault(); roll(); }
+  else if (e.key === 'Enter') { e.preventDefault(); confirmPick(); }
+  else if (/^[1-5]$/.test(e.key)) toggleHold(+e.key - 1);
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    document.title = 'ヨット';
+    if (net.mode === 'guest' && !connOk()) scheduleRetry(0);
+  }
+});
+
+/* ================= 通信：共通 ================= */
+function peerAvailable() {
+  if (typeof Peer === 'function') return true;
+  lobbyMsg('通信ライブラリを読み込めませんでした。インターネット接続を確認して、ページを再読み込みしてね');
+  return false;
+}
+function touch() { net.lastSeen = Date.now(); }
+function resetUi() {
+  stopAnim();
+  closeModals();
+  shownRollId = null; pick = null; pickKey = '';
+  poppedKey = ''; resultShownFor = -1; lastTurnKey = '';
+  busy = false; wasLost = false;
+}
+function leave() {
+  net.gen++;
+  clearTimeout(net.retryT);
+  net.retryT = 0;
+  try { if (net.peer) net.peer.destroy(); } catch (e) {}
+  Object.assign(net, { mode: null, peer: null, peerReady: false, conn: null, pending: null });
+  state = null;
+  resetUi();
+  showScreen('lobby');
+  refreshLobby();
+}
+function showWaiting(msg, code, isHost) {
+  $('#waitLabel').textContent = isHost ? '部屋コード' : '接続先の部屋';
+  $('#waitCode').textContent = code;
+  $('#waitMsg').textContent = msg;
+  $('#copyBtn').hidden = !isHost;
+  $('#waitHint').innerHTML = isHost
+    ? 'このコードを相手に伝えてね。<br>相手はこのページを開いて、コードを入れて「入る」を押します。'
+    : '';
+  showScreen('waiting');
+}
+function setWait(msg) { $('#waitMsg').textContent = msg; }
+
+// 接続確認（ping）と自動再接続の見張り
+setInterval(() => {
+  if (net.mode !== 'host' && net.mode !== 'guest') return;
+  const c = net.conn;
+  if (c && c.open) {
+    try { c.send({ t: 'ping' }); } catch (e) {}
+    if (Date.now() - net.lastSeen > 20000) {
+      net.conn = null;
+      try { c.close(); } catch (e) {}
+      if (net.mode === 'guest') { wasLost = true; busy = false; scheduleRetry(); }
+      render();
+    }
+  } else if (net.mode === 'guest' && !net.pending) {
+    scheduleRetry();
+  }
+  const p = net.peer;
+  if (p && net.peerReady && !p.destroyed && p.disconnected && Date.now() - net.lastRecon > 6000) {
+    net.lastRecon = Date.now();
+    try { p.reconnect(); } catch (e) {}
+  }
+}, 2500);
+window.addEventListener('pagehide', () => { try { if (net.peer) net.peer.destroy(); } catch (e) {} });
+
+/* ================= 通信：ホスト ================= */
+const randomCode = () => String(1000 + Math.floor(Math.random() * 9000));
+function saveHost() {
+  if (net.mode === 'host') lsSet('yacht.host', JSON.stringify({ code: net.code, state, t: Date.now() }));
+}
+function loadHostSession() {
+  try {
+    const x = JSON.parse(lsGet('yacht.host') || 'null');
+    if (x && x.state && x.state.players && x.code && Date.now() - x.t < 24 * 3600e3) return x;
+  } catch (e) {}
+  return null;
+}
+function startHost(name, sess) {
+  if (!peerAvailable()) return;
+  resetUi();
+  net.mode = 'host';
+  net.me = 0;
+  net.resume = !!sess;
+  if (sess) { state = sess.state; net.code = sess.code; }
+  else { state = newState(name); net.code = randomCode(); }
+  state.players[0].name = name;
+  showWaiting(sess ? '前回の部屋を再開しています…' : '部屋をつくっています…', net.code, true);
+  openHostPeer();
+}
+function openHostPeer() {
+  const token = ++net.gen;
+  const peer = new Peer(PREFIX + net.code, PEER_OPTS);
+  net.peer = peer;
+  net.peerReady = false;
+  peer.on('open', () => {
+    if (token !== net.gen) return;
+    net.peerReady = true;
+    saveHost();
+    if (state.phase === 'waiting') {
+      $('#waitCode').textContent = net.code;
+      setWait('相手の参加を待っています…');
+    } else if (screen !== 'game') {
+      showScreen('game');
+      render();
+    }
+  });
+  peer.on('connection', c => { if (token === net.gen) hostAccept(c); });
+  peer.on('error', err => {
+    if (token !== net.gen) return;
+    const type = err && err.type;
+    if (type === 'unavailable-id') {
+      peer.destroy();
+      if (net.resume || state.phase !== 'waiting') {
+        setWait('前の部屋がまだ閉じていません。少し待って再試行します…');
+        setTimeout(() => { if (token === net.gen) openHostPeer(); }, 3000);
+      } else {
+        net.code = randomCode();
+        $('#waitCode').textContent = net.code;
+        openHostPeer();
+      }
+      return;
+    }
+    if (!net.peerReady) {
+      peer.destroy();
+      setWait('サーバーにつながりません。再試行中…（インターネット接続を確認してね）');
+      setTimeout(() => { if (token === net.gen) openHostPeer(); }, 4000);
+      return;
+    }
+    console.warn('peer error', type, err);
+  });
+}
+function hostAccept(c) {
+  c.on('data', msg => {
+    if (!msg || typeof msg !== 'object' || net.mode !== 'host') return;
+    if (msg.t === 'hello') {
+      const g = state.players[1];
+      const otherOnline = net.conn && net.conn !== c && net.conn.open;
+      if (otherOnline && g.cid && g.cid !== msg.cid) {
+        try { c.send({ t: 'reject' }); } catch (e) {}
+        setTimeout(() => { try { c.close(); } catch (e) {} }, 800);
+        return;
+      }
+      if (net.conn && net.conn !== c) { const old = net.conn; net.conn = null; try { old.close(); } catch (e) {} }
+      net.conn = c;
+      touch();
+      const returning = state.phase !== 'waiting';
+      g.cid = String(msg.cid || '').slice(0, 40);
+      g.name = cleanName(msg.name) || 'あいて';
+      let ev = null;
+      if (state.phase === 'waiting') { startGame(state); ev = { t: 'start' }; }
+      send({ t: 'welcome' });
+      if (screen !== 'game') showScreen('game');
+      commit({ changed: true, ev });
+      if (returning) toast(`${g.name}さんがつながりました`);
+      return;
+    }
+    if (c !== net.conn) return;
+    touch();
+    if (msg.t === 'act') commit(applyAction(state, 1, msg.a));
+  });
+  const lost = () => { if (net.conn === c) { net.conn = null; render(); } };
+  c.on('close', lost);
+  c.on('error', lost);
+}
+
+/* ================= 通信：ゲスト ================= */
+function startGuest(name, code) {
+  if (!peerAvailable()) return;
+  resetUi();
+  net.mode = 'guest';
+  net.me = 1;
+  net.code = code;
+  net.myName = name;
+  state = null;
+  lsSet('yacht.lastCode', code);
+  showWaiting(`部屋 ${code} に接続しています…`, code, false);
+  openGuestPeer();
+}
+function guestStatus(msg) { if (!state) setWait(msg); }
+function openGuestPeer() {
+  const token = ++net.gen;
+  const peer = new Peer(PEER_OPTS);
+  net.peer = peer;
+  net.peerReady = false;
+  net.pending = null;
+  peer.on('open', () => { if (token !== net.gen) return; net.peerReady = true; guestConnect(); });
+  peer.on('error', err => {
+    if (token !== net.gen) return;
+    const type = err && err.type;
+    if (type === 'peer-unavailable') {
+      net.pending = null;
+      guestStatus('部屋が見つかりません。コードが合っているか、相手が部屋をつくっているか確認してね（自動で再試行します）');
+      scheduleRetry();
+      return;
+    }
+    if (!net.peerReady) {
+      peer.destroy();
+      net.peer = null;
+      guestStatus('サーバーにつながりません。再試行中…（インターネット接続を確認してね）');
+      scheduleRetry();
+      return;
+    }
+    console.warn('peer error', type, err);
+  });
+}
+function scheduleRetry(delay = 2500) {
+  if (net.mode !== 'guest') return;
+  if (net.retryT) { if (delay > 0) return; clearTimeout(net.retryT); }
+  net.retryT = setTimeout(() => {
+    net.retryT = 0;
+    if (net.mode !== 'guest' || connOk()) return;
+    const p = net.peer;
+    if (!p || p.destroyed) openGuestPeer();
+    else if (p.open) guestConnect();
+    else scheduleRetry();
+  }, delay);
+  render();
+}
+function guestConnect() {
+  const peer = net.peer;
+  if (!peer || !peer.open || net.pending || connOk()) return;
+  const c = peer.connect(PREFIX + net.code, { serialization: 'json', reliable: true });
+  if (!c) { scheduleRetry(); return; }
+  net.pending = c;
+  const to = setTimeout(() => {
+    if (net.pending !== c) return;
+    net.pending = null;
+    try { c.close(); } catch (e) {}
+    scheduleRetry();
+  }, 10000);
+  c.on('open', () => {
+    clearTimeout(to);
+    if (net.pending === c) net.pending = null;
+    if (net.mode !== 'guest' || connOk()) { try { c.close(); } catch (e) {} return; }
+    net.conn = c;
+    touch();
+    c.send({ t: 'hello', name: net.myName, cid: myCid });
+    guestStatus('つながりました！');
+    render();
+  });
+  c.on('data', msg => {
+    if (c !== net.conn || !msg || typeof msg !== 'object') return;
+    touch();
+    onGuestMsg(msg);
+  });
+  const lost = () => {
+    clearTimeout(to);
+    if (net.pending === c) { net.pending = null; scheduleRetry(); }
+    if (net.conn === c) { net.conn = null; wasLost = true; busy = false; scheduleRetry(); render(); }
+  };
+  c.on('close', lost);
+  c.on('error', lost);
+}
+function onGuestMsg(msg) {
+  switch (msg.t) {
+    case 'welcome':
+      if (wasLost && state) toast('再接続しました');
+      wasLost = false;
+      break;
+    case 'state':
+      state = msg.s;
+      busy = false;
+      clearTimeout(busyT);
+      if (screen !== 'game') showScreen('game');
+      render();
+      break;
+    case 'event':
+      handleEvent(msg.e);
+      break;
+    case 'reject':
+      leave();
+      lobbyMsg('この部屋ではもう別の人が遊んでいます');
+      break;
+  }
+}
+
+/* ================= ひとり（1台）モード ================= */
+function startLocal(name) {
+  resetUi();
+  net.mode = 'local';
+  net.me = 0;
+  net.code = '';
+  state = newState(name || 'プレイヤー1');
+  state.players[1].name = 'プレイヤー2';
+  startGame(state);
+  showScreen('game');
+  render();
+  handleEvent({ t: 'start' });
+}
+
+/* ================= ロビー ================= */
+function lobbyMsg(m) { $('#lobbyMsg').textContent = m; }
+function readName(required = true) {
+  const n = cleanName($('#nameInput').value);
+  if (!n && required) { lobbyMsg('名前を入れてね'); $('#nameInput').focus(); return null; }
+  if (n) lsSet('yacht.name', n);
+  return n;
+}
+function refreshLobby() {
+  $('#nameInput').value = lsGet('yacht.name') || '';
+  $('#codeInput').value = lsGet('yacht.lastCode') || '';
+  const sess = loadHostSession();
+  const rb = $('#resumeBtn');
+  rb.hidden = !sess || sess.state.phase === 'waiting';
+  if (sess && !rb.hidden) {
+    const opp = sess.state.players[1].name;
+    rb.textContent = `前回の部屋を再開（コード ${sess.code}${opp ? '・' + opp + 'さん' : ''}）`;
+  }
+}
+$('#createBtn').addEventListener('click', () => { lobbyMsg(''); const n = readName(); if (n) startHost(n, null); });
+$('#resumeBtn').addEventListener('click', () => {
+  lobbyMsg('');
+  const n = readName(), sess = loadHostSession();
+  if (n && sess) startHost(n, sess);
+});
+$('#joinBtn').addEventListener('click', () => {
+  lobbyMsg('');
+  const n = readName();
+  if (!n) return;
+  const code = $('#codeInput').value.replace(/\D/g, '');
+  if (code.length !== 4) { lobbyMsg('4桁の部屋コードを入れてね'); $('#codeInput').focus(); return; }
+  startGuest(n, code);
+});
+$('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); });
+$('#localBtn').addEventListener('click', () => { lobbyMsg(''); startLocal(readName(false)); });
+$('#cancelBtn').addEventListener('click', leave);
+$('#copyBtn').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(net.code); toast('コピーしました'); }
+  catch (e) { toast('コピーできませんでした。コードを直接伝えてね'); }
+});
+
+/* ---------- スマホ：サイコロ台の高さぶん表の下に余白 ---------- */
+function updateTrayHeight() {
+  document.documentElement.style.setProperty('--tray-h', $('#tray').offsetHeight + 'px');
+}
+if (window.ResizeObserver) new ResizeObserver(updateTrayHeight).observe($('#tray'));
+window.addEventListener('resize', updateTrayHeight);
+
+refreshLobby();
+})();
+</script>
+</body>
+</html>
