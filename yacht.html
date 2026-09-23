@@ -226,9 +226,6 @@ h1{font-size:44px;margin:0;letter-spacing:.12em;font-weight:800}
 .dots i.on{background:#3a2a00}
 .btn-roll:disabled .dots i{background:rgba(255,255,255,.15)}
 .btn-roll:disabled .dots i.on{background:rgba(255,255,255,.6)}
-.btn-confirm{flex-direction:column;gap:0;line-height:1.3;font-size:15px;background:#fff;color:var(--felt-d)}
-.btn-confirm small{font-size:11px;opacity:.7}
-.btn-confirm.zero{background:#ffe9e3;color:#a33a22}
 .stamps{display:flex;justify-content:center;gap:6px;margin-top:10px}
 .stamps button{width:38px;height:34px;border:none;border-radius:10px;background:rgba(255,255,255,.12);font-size:18px;cursor:pointer;transition:transform .1s}
 .stamps button:active{transform:scale(.88)}
@@ -376,7 +373,6 @@ kbd{display:inline-block;padding:0 5px;border:1px solid var(--line);border-botto
         <div class="dice-row" id="diceRow"></div>
         <div class="controls">
           <button id="rollBtn" class="btn btn-roll"><span id="rollLabel">サイコロをふる</span><span class="dots" id="rollDots"><i></i><i></i><i></i></span></button>
-          <button id="confirmBtn" class="btn btn-confirm" hidden></button>
           <button id="resultBtn" class="btn btn-ghost" hidden>結果を見る</button>
           <button id="rematchBtn" class="btn btn-gold" hidden>もう一度あそぶ</button>
         </div>
@@ -429,7 +425,7 @@ kbd{display:inline-block;padding:0 5px;border:1px solid var(--line);border-botto
       <tr><th>B.ストレート</th><td>5つ連続した目（12345・23456）→ 30点</td></tr>
       <tr><th>ヨット</th><td>5個ぜんぶ同じ目 → 50点</td></tr>
     </table>
-    <p class="note">役をえらぶときは、表の数字を1回タップ → もう1回タップ（または下のボタン）で記入。<br>PCなら <kbd>Space</kbd> でふる、<kbd>1</kbd>〜<kbd>5</kbd> でキープ、<kbd>Enter</kbd> で記入。</p>
+    <p class="note">記入するときは、記入したい枠を<b>2回タップ</b>します（1回目で選択、2回目で決定）。<br>PCなら <kbd>Space</kbd> でふる、<kbd>1</kbd>〜<kbd>5</kbd> でキープ。</p>
     <button class="btn btn-ghost" data-close>とじる</button>
   </div>
 </div>
@@ -701,6 +697,7 @@ function renderTop() {
     chip.querySelector('.chip-score').textContent = totalOf(p);
     const tags = [];
     if (net.mode !== 'local' && i === me) tags.push('あなた');
+    if (s.phase !== 'waiting') tags.push(i === s.starter ? '先攻' : '後攻');
     if (s.gameNo > 1 || s.wins[i] > 0) tags.push(s.wins[i] + '勝');
     chip.querySelector('.chip-sub').textContent = tags.join('・');
     chip.classList.toggle('cur', s.phase === 'playing' && s.current === i);
@@ -743,7 +740,10 @@ function renderSheet() {
   };
   let h = '<colgroup><col class="c-cat"><col><col></colgroup><thead><tr><th class="corner">役</th>';
   for (let i = 0; i < 2; i++) {
-    h += `<th class="ph c${i}"><span class="ph-name">${esc(s.players[i].name || '…')}</span>${net.mode !== 'local' && i === me ? '<span class="you">あなた</span>' : ''}</th>`;
+    const sub = [];
+    if (net.mode !== 'local' && i === me) sub.push('あなた');
+    if (s.phase !== 'waiting') sub.push(i === s.starter ? '先攻' : '後攻');
+    h += `<th class="ph c${i}"><span class="ph-name">${esc(s.players[i].name || '…')}</span>${sub.length ? `<span class="you">${sub.join('・')}</span>` : ''}</th>`;
   }
   h += '</tr></thead><tbody>';
   CATS.forEach((cat, idx) => {
@@ -771,9 +771,10 @@ function renderControls() {
   if (!fin) {
     title = who(cur) + 'の番';
     if (mine) {
-      hint = s.rollsLeft === 3 ? 'サイコロをふってね'
-        : s.rollsLeft > 0 ? 'のこすサイコロをタップ → ふり直す／表から役をえらぶ'
-        : '表から記入する役をえらんでね';
+      hint = pick && canPick() ? `「${CAT[pick].name} ${scoreFor(CAT[pick], s.dice)}点」もう一度タップで記入`
+        : s.rollsLeft === 3 ? 'サイコロをふってね'
+        : s.rollsLeft > 0 ? 'のこすサイコロをタップ → ふり直す／表の役を2回タップで記入'
+        : '記入する役を2回タップしてね';
     } else {
       hint = s.rollsLeft === 3 ? 'サイコロをふるのを待っています…' : `${3 - s.rollsLeft}回目をふりました`;
     }
@@ -782,19 +783,12 @@ function renderControls() {
   $('#turnHint').textContent = hint;
   $('#turnBox').className = 'turn' + (fin ? '' : ' c' + cur);
 
-  const rollBtn = $('#rollBtn'), confirmBtn = $('#confirmBtn');
+  const rollBtn = $('#rollBtn');
   rollBtn.hidden = fin;
   rollBtn.disabled = !canRoll();
   $('#rollLabel').textContent = s.rollsLeft === 3 ? 'サイコロをふる' : s.rollsLeft > 0 ? 'もう一度ふる' : 'もうふれません';
   [...$('#rollDots').children].forEach((d, k) => d.classList.toggle('on', k < s.rollsLeft));
 
-  const showConfirm = !fin && !!pick && canPick();
-  confirmBtn.hidden = !showConfirm;
-  if (showConfirm) {
-    const pts = scoreFor(CAT[pick], s.dice);
-    confirmBtn.innerHTML = `<span><b>${CAT[pick].name}</b>に<b>${pts}点</b></span><small>で記入する</small>`;
-    confirmBtn.classList.toggle('zero', pts === 0);
-  }
   $('#resultBtn').hidden = !fin;
   $('#rematchBtn').hidden = !fin;
   $('#rematchBtn').disabled = !connOk();
@@ -987,7 +981,6 @@ function rematch() {
 }
 
 $('#rollBtn').addEventListener('click', roll);
-$('#confirmBtn').addEventListener('click', confirmPick);
 $('#rematchBtn').addEventListener('click', rematch);
 $('#resRematch').addEventListener('click', rematch);
 $('#resultBtn').addEventListener('click', showResult);
@@ -1016,7 +1009,6 @@ document.addEventListener('keydown', e => {
   if (screen !== 'game' || !state || document.querySelector('.modal.open')) return;
   if (e.target.closest && e.target.closest('input, textarea')) return;
   if (e.key === ' ') { e.preventDefault(); roll(); }
-  else if (e.key === 'Enter') { e.preventDefault(); confirmPick(); }
   else if (/^[1-5]$/.test(e.key)) toggleHold(+e.key - 1);
 });
 document.addEventListener('visibilitychange', () => {
