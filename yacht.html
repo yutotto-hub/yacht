@@ -1304,6 +1304,7 @@ function startLocal(name) {
 }
 
 /* ================= ロビー ================= */
+let codePrefilled = false;
 function lobbyMsg(m) { $('#lobbyMsg').textContent = m; }
 function readName(required = true) {
   const n = cleanName($('#nameInput').value);
@@ -1314,6 +1315,7 @@ function readName(required = true) {
 function refreshLobby() {
   $('#nameInput').value = lsGet('yacht.name') || '';
   $('#codeInput').value = lsGet('yacht.lastCode') || '';
+  codePrefilled = !!$('#codeInput').value;
   const sess = loadHostSession();
   const rb = $('#resumeBtn');
   rb.hidden = !sess || sess.state.phase === 'waiting';
@@ -1336,7 +1338,20 @@ $('#joinBtn').addEventListener('click', () => {
   if (code.length !== 4) { lobbyMsg('4桁の部屋コードを入れてね'); $('#codeInput').focus(); return; }
   startGuest(n, code);
 });
-$('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); });
+// 前回のコードが残っているときは、打ち始めた時点で消す
+function clearPrefilledCode() {
+  if (!codePrefilled) return false;
+  codePrefilled = false;
+  $('#codeInput').value = '';
+  return true;
+}
+$('#codeInput').addEventListener('focus', () => { if (codePrefilled) $('#codeInput').select(); });
+$('#codeInput').addEventListener('beforeinput', e => { if (e.inputType === 'insertText') clearPrefilledCode(); });
+$('#codeInput').addEventListener('input', () => { codePrefilled = false; });
+$('#codeInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { $('#joinBtn').click(); return; }
+  if (e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey) clearPrefilledCode();
+});
 $('#localBtn').addEventListener('click', () => { lobbyMsg(''); startLocal(readName(false)); });
 $('#cancelBtn').addEventListener('click', leave);
 $('#copyBtn').addEventListener('click', async () => {
