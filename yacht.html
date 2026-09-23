@@ -192,7 +192,29 @@ h1{font-size:44px;margin:0;letter-spacing:.12em;font-weight:800}
 .turn.c0 .turn-title::before{background:#ff8a70}
 .turn.c1 .turn-title::before{background:#6bb8ec}
 .turn-hint{font-size:12px;opacity:.8}
-.dice-row{display:flex;justify-content:center;gap:10px;padding:14px 0 30px}
+.cup{
+  position:relative; margin:12px auto 0; padding:8px 10px; max-width:340px; min-height:58px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  background:linear-gradient(180deg,#a3703c,#7d5228); border:2px solid #6b4520; border-radius:14px;
+  box-shadow:inset 0 3px 10px rgba(0,0,0,.35), 0 3px 0 rgba(0,0,0,.2);
+}
+.cup.empty{opacity:.4}
+.cup .die{--ds:30px;box-shadow:0 2px 0 #cbbfad}
+.cup.shaking{animation:cupshake .17s linear infinite}
+.cup.shaking .die:nth-child(odd){animation:jiggle .13s linear infinite}
+.cup.shaking .die:nth-child(even){animation:jiggle .11s linear infinite reverse}
+@keyframes cupshake{
+  0%{transform:translate(-3px,0) rotate(-1.2deg)}
+  50%{transform:translate(3px,-2px) rotate(1.2deg)}
+  100%{transform:translate(-3px,0) rotate(-1.2deg)}
+}
+@keyframes jiggle{
+  0%{transform:translate(-2px,1px) rotate(-10deg)}
+  50%{transform:translate(2px,-2px) rotate(12deg)}
+  100%{transform:translate(-2px,1px) rotate(-10deg)}
+}
+.dice-tray{margin-top:10px;padding:12px 8px 30px;border-radius:16px;background:rgba(0,0,0,.16);box-shadow:inset 0 2px 8px rgba(0,0,0,.25)}
+.dice-row{display:flex;justify-content:center;gap:10px}
 .die{
   width:var(--ds); height:var(--ds); padding:calc(var(--ds) * .1); position:relative; cursor:pointer; border:none;
   display:grid; grid-template:repeat(3,1fr)/repeat(3,1fr);
@@ -211,16 +233,13 @@ h1{font-size:44px;margin:0;letter-spacing:.12em;font-weight:800}
   padding:1px 8px; font-size:11px; font-weight:800; white-space:nowrap;
   color:#2a1f00; background:var(--gold); border-radius:999px;
 }
-.die.rolling{animation:shake .14s linear infinite}
-@keyframes shake{
-  0%{transform:rotate(-14deg) translate(-2px,-5px)}
-  50%{transform:rotate(12deg) translate(2px,2px)}
-  100%{transform:rotate(-14deg) translate(-2px,-5px)}
-}
+.die.landed{animation:landPop .24s ease-out}
+@keyframes landPop{0%{transform:scale(1.14,.84)}100%{transform:scale(1)}}
 .controls{display:flex;gap:10px}
 .controls .btn{flex:1;min-height:54px}
 .btn-roll{flex-direction:column;gap:3px;line-height:1.1;font-size:17px;background:var(--gold);color:#3a2a00}
 .btn-roll:disabled{background:rgba(255,255,255,.14);color:rgba(255,255,255,.55);box-shadow:none}
+.btn-roll.throw:not(:disabled){background:#fff;color:var(--felt-d)}
 .dots{display:flex;gap:4px}
 .dots i{width:7px;height:7px;border-radius:50%;background:rgba(0,0,0,.2)}
 .dots i.on{background:#3a2a00}
@@ -373,7 +392,8 @@ kbd{display:inline-block;padding:0 5px;border:1px solid var(--line);border-botto
     <aside class="tray" id="tray">
       <div class="tray-inner">
         <div class="turn" id="turnBox"><div class="turn-title" id="turnTitle"></div><div class="turn-hint" id="turnHint"></div></div>
-        <div class="dice-row" id="diceRow"></div>
+        <div class="cup" id="cup"></div>
+        <div class="dice-tray"><div class="dice-row" id="diceRow"></div></div>
         <div class="controls">
           <button id="rollBtn" class="btn btn-roll"><span id="rollLabel">サイコロをふる</span><span class="dots" id="rollDots"><i></i><i></i><i></i></span></button>
           <button id="confirmBtn" class="btn btn-confirm" hidden></button>
@@ -414,8 +434,8 @@ kbd{display:inline-block;padding:0 5px;border:1px solid var(--line);border-botto
   <div class="modal-card rules">
     <h2>ヨットのルール</h2>
     <ol>
-      <li>自分の番では、5個のサイコロを<b>最大3回</b>までふれます。</li>
-      <li>2回目・3回目は、のこしたいサイコロをタップして<b>キープ</b>してからふります。</li>
+      <li>「サイコロをふる」でトレイがふるえ、「サイコロを投げる」で出目が決まります。これで1回ぶん、<b>最大3回</b>までふれます。</li>
+      <li>2回目・3回目は、のこしたいサイコロをタップして<b>キープ</b>してからふります。キープしなかったサイコロだけがトレイに戻ります。</li>
       <li>ふったら（1回目・2回目で止めてもOK）、表からまだ使っていない役を1つえらんで記入。条件を満たさない役は<b>0点</b>で記入になります。</li>
       <li>12ラウンドで全部の役を埋めて、合計点が高いほうの勝ち！</li>
     </ol>
@@ -429,7 +449,7 @@ kbd{display:inline-block;padding:0 5px;border:1px solid var(--line);border-botto
       <tr><th>B.ストレート</th><td>5つ連続した目（12345・23456）→ 30点</td></tr>
       <tr><th>ヨット</th><td>5個ぜんぶ同じ目 → 50点</td></tr>
     </table>
-    <p class="note">役をえらぶときは、表の数字を1回タップ → もう1回タップ（または下のボタン）で記入。<br>PCなら <kbd>Space</kbd> でふる、<kbd>1</kbd>〜<kbd>5</kbd> でキープ、<kbd>Enter</kbd> で記入。</p>
+    <p class="note">役をえらぶときは、表の数字を1回タップ → もう1回タップ（または下のボタン）で記入。<br>PCなら <kbd>Space</kbd> でふる／投げる、<kbd>1</kbd>〜<kbd>5</kbd> でキープ、<kbd>Enter</kbd> で記入。</p>
     <button class="btn btn-ghost" data-close>とじる</button>
   </div>
 </div>
@@ -505,13 +525,14 @@ function newState(name0) {
   return {
     players: [{ name: name0, cid: null, scores: emptyScores() }, { name: '', cid: null, scores: emptyScores() }],
     phase: 'waiting', current: 0, starter: 0, gameNo: 0,
-    dice: [0, 0, 0, 0, 0], held: [false, false, false, false, false],
+    dice: [0, 0, 0, 0, 0], held: [false, false, false, false, false], shaking: false,
     rollsLeft: 3, rollId: 0, turnId: 0, last: null, wins: [0, 0], draws: 0,
   };
 }
 function newTurn(s) {
   s.dice = [0, 0, 0, 0, 0];
   s.held = [false, false, false, false, false];
+  s.shaking = false;
   s.rollsLeft = 3;
   s.turnId++;
 }
@@ -534,24 +555,31 @@ function applyAction(s, actor, a) {
   }
   if (s.phase !== 'playing' || actor !== s.current) return null;
   switch (a.type) {
-    case 'roll': {
-      if (s.rollsLeft <= 0) return null;
+    case 'shake': {                      // トレイをふりはじめる（キープ以外はトレイに戻る）
+      if (s.shaking || s.rollsLeft <= 0) return null;
       const first = s.rollsLeft === 3;
       if (!first && s.held.every(Boolean)) return null;
       if (first) s.held = [false, false, false, false, false];
-      s.dice = s.dice.map((v, i) => (!first && s.held[i]) ? v : d6());
+      s.dice = s.dice.map((v, i) => s.held[i] ? v : 0);
+      s.shaking = true;
+      return { changed: true };
+    }
+    case 'roll': {                       // トレイから投げ出して出目を決める
+      if (!s.shaking) return null;
+      s.dice = s.dice.map(v => v || d6());
+      s.shaking = false;
       s.rollsLeft--;
       s.rollId++;
       return { changed: true };
     }
     case 'hold': {
-      if (!Number.isInteger(a.i) || a.i < 0 || a.i > 4 || s.rollsLeft === 3 || s.rollsLeft === 0) return null;
+      if (!Number.isInteger(a.i) || a.i < 0 || a.i > 4 || s.shaking || s.rollsLeft === 3 || s.rollsLeft === 0) return null;
       s.held[a.i] = !!a.v;
       return { changed: true };
     }
     case 'score': {
       const cat = CAT[a.cat], p = s.players[actor];
-      if (!cat || s.rollsLeft === 3 || p.scores[cat.id] !== null) return null;
+      if (!cat || s.shaking || s.rollsLeft === 3 || p.scores[cat.id] !== null) return null;
       const pts = scoreFor(cat, s.dice);
       p.scores[cat.id] = pts;
       s.last = { p: actor, cat: cat.id, key: s.gameNo + '-' + s.turnId };
@@ -599,8 +627,9 @@ const sfx = {
     src.connect(f); f.connect(g); g.connect(c.destination);
     src.start(c.currentTime + t);
   },
-  roll()    { if (this.ok()) for (let i = 0; i < 9; i++) this.knock(Math.random() * .55, .12 + Math.random() * .12); },
-  land()    { if (this.ok()) { this.knock(0, .3); this.knock(.05, .2); } },
+  rattle()  { if (this.ok()) { this.knock(0, .05 + Math.random() * .06); if (Math.random() < .6) this.knock(.05, .05); } },
+  throwOut(){ if (this.ok()) for (let i = 0; i < 7; i++) this.knock(.02 + Math.random() * .45, .13 + Math.random() * .12); },
+  hit()     { if (this.ok()) this.knock(0, .22); },
   score()   { if (this.ok()) { this.tone(660, 0, .12, 'triangle'); this.tone(990, .08, .2, 'triangle'); } },
   turn()    { if (this.ok()) { this.tone(523, 0, .15); this.tone(784, .12, .28); } },
   fanfare() { if (this.ok()) [523, 659, 784, 1047].forEach((f, i) => this.tone(f, i * .11, .32, 'triangle', .14)); },
@@ -612,7 +641,7 @@ document.addEventListener('keydown', () => sfx.init());
 let state = null;
 let screen = 'lobby';
 let pick = null, pickKey = '';
-let shownRollId = null, animating = false, animSet = [], animTick = 0, animEnd = 0;
+let shownRollId = null, animating = false, animSet = [], animTick = 0, animEnd = 0, shakeTick = 0;
 let poppedKey = '', resultShownFor = -1, lastTurnKey = '';
 let busy = false, busyT = 0, wasLost = false, lastStamp = 0;
 
@@ -635,9 +664,10 @@ function who(i) {
 }
 function connOk() { return net.mode !== 'guest' || !!(net.conn && net.conn.open); }
 function canAct() { return !!state && state.phase === 'playing' && state.current === viewer() && !animating && !busy && connOk(); }
-function canHold() { return canAct() && state.rollsLeft > 0 && state.rollsLeft < 3; }
-function canRoll() { return canAct() && state.rollsLeft > 0 && !(state.rollsLeft < 3 && state.held.every(Boolean)); }
-function canPick() { return canAct() && state.rollsLeft < 3; }
+function canHold() { return canAct() && !state.shaking && state.rollsLeft > 0 && state.rollsLeft < 3; }
+function canShake() { return canAct() && !state.shaking && state.rollsLeft > 0 && !(state.rollsLeft < 3 && state.held.every(Boolean)); }
+function canThrow() { return canAct() && !!state.shaking; }
+function canPick() { return canAct() && !state.shaking && state.rollsLeft < 3; }
 
 /* ---------- サイコロ要素 ---------- */
 const miniDie = v => `<span class="mini-die" data-v="${v}">${Array.from({ length: 9 }, (_, k) => `<i${FACES[v].includes(k) ? ' class="on"' : ''}></i>`).join('')}</span>`;
@@ -660,19 +690,31 @@ function setFace(el, v) {
   const on = FACES[v] || [];
   [...el.children].forEach((p, k) => p.classList.toggle('on', on.includes(k)));
 }
+const CUP_FACES = [6, 3, 5, 2, 4];
+const cupEls = [];
+for (let i = 0; i < 5; i++) {
+  const d = document.createElement('div');
+  d.className = 'die';
+  d.innerHTML = '<i></i>'.repeat(9);
+  setFace(d, CUP_FACES[i]);
+  $('#cup').appendChild(d);
+  cupEls.push(d);
+}
 $('#stamps').innerHTML = STAMPS.map(s => `<button type="button" data-stamp="${s}">${s}</button>`).join('');
 
 /* ================= 描画 ================= */
 function render() {
   if (!state || screen !== 'game') return;
   const s = state;
-  const key = s.turnId + ':' + s.rollId;
+  const key = s.turnId + ':' + s.rollId + ':' + (s.shaking ? 1 : 0);
   if (key !== pickKey) { pickKey = key; pick = null; }
   if (shownRollId === null) shownRollId = s.rollId;
-  if (s.rollId !== shownRollId) { shownRollId = s.rollId; startRollAnim(); }
+  if (s.rollId !== shownRollId) { shownRollId = s.rollId; startThrowAnim(); }
   if (pick && !canPick()) pick = null;
 
   renderTop();
+  renderCup();
+  updateShakeFx();
   renderDice();
   renderSheet();
   renderControls();
@@ -707,6 +749,29 @@ function renderTop() {
   });
   $('#roundInfo').textContent = s.phase === 'finished' ? '終了'
     : s.phase === 'waiting' ? '-' : Math.min(12, filled(s.players[s.current]) + 1) + '/12';
+}
+
+function renderCup() {
+  const s = state, inCup = s.dice.filter(v => !v).length;
+  const cup = $('#cup');
+  cup.classList.toggle('shaking', !!s.shaking);
+  cup.classList.toggle('empty', inCup === 0);
+  cupEls.forEach((el, i) => { el.hidden = i >= inCup; });
+}
+
+// ふっているあいだ、トレイの中の目をカタカタ入れかえる
+function updateShakeFx() {
+  const on = !!(state && state.shaking && screen === 'game');
+  if (on && !shakeTick) {
+    shakeTick = setInterval(() => {
+      cupEls.forEach(el => { if (!el.hidden) setFace(el, 1 + Math.floor(Math.random() * 6)); });
+      sfx.rattle();
+    }, 110);
+  } else if (!on && shakeTick) {
+    clearInterval(shakeTick);
+    shakeTick = 0;
+    cupEls.forEach((el, i) => setFace(el, CUP_FACES[i]));
+  }
 }
 
 function renderDice() {
@@ -771,11 +836,14 @@ function renderControls() {
   if (!fin) {
     title = who(cur) + 'の番';
     if (mine) {
-      hint = s.rollsLeft === 3 ? 'サイコロをふってね'
+      hint = s.shaking ? 'トレイをふっています → 「投げる」で出目が決まる'
+        : s.rollsLeft === 3 ? 'サイコロをふってね'
         : s.rollsLeft > 0 ? 'のこすサイコロをタップ → ふり直す／表から役をえらぶ'
         : '表から記入する役をえらんでね';
     } else {
-      hint = s.rollsLeft === 3 ? 'サイコロをふるのを待っています…' : `${3 - s.rollsLeft}回目をふりました`;
+      hint = s.shaking ? 'トレイをふっています…'
+        : s.rollsLeft === 3 ? 'サイコロをふるのを待っています…'
+        : `${3 - s.rollsLeft}回目をふりました`;
     }
   }
   $('#turnTitle').textContent = title;
@@ -784,8 +852,11 @@ function renderControls() {
 
   const rollBtn = $('#rollBtn'), confirmBtn = $('#confirmBtn');
   rollBtn.hidden = fin;
-  rollBtn.disabled = !canRoll();
-  $('#rollLabel').textContent = s.rollsLeft === 3 ? 'サイコロをふる' : s.rollsLeft > 0 ? 'もう一度ふる' : 'もうふれません';
+  rollBtn.disabled = s.shaking ? !canThrow() : !canShake();
+  rollBtn.classList.toggle('throw', !!s.shaking);
+  $('#rollLabel').textContent = s.shaking ? 'サイコロを投げる'
+    : s.rollsLeft === 3 ? 'サイコロをふる'
+    : s.rollsLeft > 0 ? 'もう一度ふる' : 'もうふれません';
   [...$('#rollDots').children].forEach((d, k) => d.classList.toggle('on', k < s.rollsLeft));
 
   const showConfirm = !fin && !!pick && canPick();
@@ -815,28 +886,54 @@ function renderBanner() {
   b.hidden = !msg;
 }
 
-function startRollAnim() {
+// トレイから出目トレイへ、1個ずつ転がり出る
+function startThrowAnim() {
   const s = state;
   animSet = [0, 1, 2, 3, 4].filter(i => !s.held[i]);
   animating = true;
-  sfx.roll();
-  animSet.forEach(i => diceEls[i].classList.add('rolling'));
+  sfx.throwOut();
   clearInterval(animTick);
   clearTimeout(animEnd);
-  animTick = setInterval(() => animSet.forEach(i => setFace(diceEls[i], 1 + Math.floor(Math.random() * 6))), 70);
+  const cup = $('#cup').getBoundingClientRect();
+  const cx = cup.left + cup.width / 2, cy = cup.top + cup.height / 2;
+  const t0 = Date.now(), lands = {};
+  animSet.forEach((i, k) => {
+    const el = diceEls[i];
+    el.classList.remove('blank');
+    setFace(el, 1 + Math.floor(Math.random() * 6));
+    const r = el.getBoundingClientRect();
+    const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2);
+    const delay = k * 60, dur = 470 + k * 30;
+    lands[i] = delay + dur;
+    if (el.animate) el.animate([
+      { transform: `translate(${dx}px, ${dy}px) rotate(-220deg) scale(.7)` },
+      { transform: `translate(${dx * .15}px, ${dy * .2 - 16}px) rotate(70deg) scale(1.08)`, offset: .65 },
+      { transform: 'none' },
+    ], { duration: dur, delay, easing: 'cubic-bezier(.25,.85,.35,1)', fill: 'backwards' });
+    setTimeout(() => {
+      if (!state || !animating) return;
+      setFace(el, state.dice[i]);
+      el.classList.add('landed');
+      sfx.hit();
+      setTimeout(() => el.classList.remove('landed'), 260);
+    }, delay + dur);
+  });
+  const total = animSet.length ? Math.max(...animSet.map(i => lands[i])) : 0;
+  animTick = setInterval(() => {
+    const t = Date.now() - t0;
+    animSet.forEach(i => { if (t < lands[i] - 40) setFace(diceEls[i], 1 + Math.floor(Math.random() * 6)); });
+  }, 70);
   animEnd = setTimeout(() => {
     clearInterval(animTick);
     animating = false;
-    animSet.forEach(i => diceEls[i].classList.remove('rolling'));
-    sfx.land();
     render();
-  }, 650);
+  }, total + 120);
 }
 function stopAnim() {
   clearInterval(animTick);
   clearTimeout(animEnd);
   animating = false;
-  diceEls.forEach(el => el.classList.remove('rolling'));
+  if (shakeTick) { clearInterval(shakeTick); shakeTick = 0; }
 }
 
 /* ---------- イベント（トースト・スタンプ・演出） ---------- */
@@ -933,7 +1030,7 @@ function dispatch(a) {
   if (net.mode === 'guest') {
     if (!connOk()) return;
     if (a.type === 'hold') { state.held[a.i] = a.v; render(); }
-    if (a.type === 'roll' || a.type === 'score' || a.type === 'rematch') {
+    if (a.type === 'shake' || a.type === 'roll' || a.type === 'score' || a.type === 'rematch') {
       busy = true;
       clearTimeout(busyT);
       busyT = setTimeout(() => { busy = false; render(); }, 4000);
@@ -964,10 +1061,10 @@ function toggleHold(i) {
   if (!canHold() || !state.dice[i]) return;
   dispatch({ type: 'hold', i, v: !state.held[i] });
 }
-function roll() {
-  if (!canRoll()) return;
-  pick = null;
-  dispatch({ type: 'roll' });
+function shakeOrThrow() {
+  if (!state) return;
+  if (state.shaking) { if (canThrow()) dispatch({ type: 'roll' }); }
+  else if (canShake()) { pick = null; dispatch({ type: 'shake' }); }
 }
 function selectCat(id) {
   if (!canPick() || state.players[state.current].scores[id] !== null) return;
@@ -986,7 +1083,7 @@ function rematch() {
   if (state && state.phase === 'finished') dispatch({ type: 'rematch' });
 }
 
-$('#rollBtn').addEventListener('click', roll);
+$('#rollBtn').addEventListener('click', shakeOrThrow);
 $('#confirmBtn').addEventListener('click', confirmPick);
 $('#rematchBtn').addEventListener('click', rematch);
 $('#resRematch').addEventListener('click', rematch);
@@ -1015,7 +1112,7 @@ $('#leaveBtn').addEventListener('click', () => {
 document.addEventListener('keydown', e => {
   if (screen !== 'game' || !state || document.querySelector('.modal.open')) return;
   if (e.target.closest && e.target.closest('input, textarea')) return;
-  if (e.key === ' ') { e.preventDefault(); roll(); }
+  if (e.key === ' ') { e.preventDefault(); shakeOrThrow(); }
   else if (e.key === 'Enter') { e.preventDefault(); confirmPick(); }
   else if (/^[1-5]$/.test(e.key)) toggleHold(+e.key - 1);
 });
