@@ -187,6 +187,15 @@ h1{font-size:44px;margin:0;letter-spacing:.12em;font-weight:800}
 }
 .tray-inner{max-width:520px;margin:0 auto}
 .turn{display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px}
+.turn-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.turn-count{
+  display:flex; align-items:baseline; gap:3px; padding:2px 12px; line-height:1;
+  background:rgba(0,0,0,.28); border:2px solid var(--gold); border-radius:999px;
+}
+.turn-count small{font-size:11px;opacity:.85}
+.turn-count b{font-size:26px;color:var(--gold);min-width:16px;text-align:center}
+.turn-count.zero{border-color:rgba(255,255,255,.35)}
+.turn-count.zero b{color:rgba(255,255,255,.6)}
 .turn-title{font-weight:800;font-size:17px}
 .turn-title::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:1px;background:#fff}
 .turn.c0 .turn-title::before{background:#ff8a70}
@@ -369,7 +378,13 @@ kbd{display:inline-block;padding:0 5px;border:1px solid var(--line);border-botto
     <table class="sheet" id="sheet"></table>
     <aside class="tray" id="tray">
       <div class="tray-inner">
-        <div class="turn" id="turnBox"><div class="turn-title" id="turnTitle"></div><div class="turn-hint" id="turnHint"></div></div>
+        <div class="turn" id="turnBox">
+          <div class="turn-row">
+            <div class="turn-title" id="turnTitle"></div>
+            <div class="turn-count" id="turnCount"><small>のこり</small><b id="turnCountNum">3</b><small>回</small></div>
+          </div>
+          <div class="turn-hint" id="turnHint"></div>
+        </div>
         <div class="dice-row" id="diceRow"></div>
         <div class="controls">
           <button id="rollBtn" class="btn btn-roll"><span id="rollLabel">サイコロをふる</span><span class="dots" id="rollDots"><i></i><i></i><i></i></span></button>
@@ -781,6 +796,9 @@ function renderControls() {
   }
   $('#turnTitle').textContent = title;
   $('#turnHint').textContent = hint;
+  $('#turnCount').hidden = fin;
+  $('#turnCountNum').textContent = s.rollsLeft;
+  $('#turnCount').classList.toggle('zero', s.rollsLeft === 0);
   $('#turnBox').className = 'turn' + (fin ? '' : ' c' + cur);
 
   const rollBtn = $('#rollBtn');
