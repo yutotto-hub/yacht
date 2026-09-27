@@ -166,6 +166,8 @@ h1{font-size:34px;margin:6px 0 0;letter-spacing:.06em;font-weight:800}
 .person + .person{margin-left:-16px}
 .person.spouse .head::before{background:#6b3f2f}
 .person.kid{transform:scale(.62);transform-origin:bottom center;margin-left:-19px}
+.petwalk{flex:none;margin:0 0 -2px -6px;font-size:15px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
+.walker.walking .petwalk{animation:bodyBob .17s linear infinite}
 .person.kid .head::before{background:#2f3a4a}
 .person span{position:absolute;display:block}
 .person .shadow{left:3px;bottom:-3px;width:20px;height:6px;border-radius:50%;background:rgba(20,30,60,.22);filter:blur(1px)}
@@ -284,6 +286,10 @@ h1{font-size:34px;margin:6px 0 0;letter-spacing:.06em;font-weight:800}
 }
 .ev-title{font-weight:800;font-size:13.5px;display:flex;align-items:center;gap:6px}
 .ev-title .ic{font-size:18px}
+.pass-tag{
+  padding:1px 7px; font-size:10px; font-weight:800; border-radius:999px;
+  background:rgba(255,255,255,.22); color:#fff;
+}
 .ev-lines{margin-top:2px;font-size:12px;opacity:.92;line-height:1.5}
 .ev-lines .up{color:#7be0a8;font-weight:800}
 .ev-lines .down{color:#ff9d9d;font-weight:800}
@@ -299,7 +305,7 @@ h1{font-size:34px;margin:6px 0 0;letter-spacing:.06em;font-weight:800}
   width:100%; height:100%; border-radius:50%; position:relative; z-index:1;
   border:4px solid #fff;
   box-shadow:0 5px 12px rgba(0,0,0,.4), inset 0 -10px 20px rgba(0,0,0,.28), inset 0 8px 14px rgba(255,255,255,.35);
-  transition:transform 2.05s cubic-bezier(.12,.62,.16,1);
+  transition:transform 2.85s cubic-bezier(.05,.72,.06,1);
   background:conic-gradient(
     #f2b632 0deg 36deg, #4f9ae0 36deg 72deg, #f2b632 72deg 108deg, #4f9ae0 108deg 144deg,
     #f2b632 144deg 180deg, #4f9ae0 180deg 216deg, #f2b632 216deg 252deg, #4f9ae0 252deg 288deg,
@@ -396,13 +402,19 @@ h1{font-size:34px;margin:6px 0 0;letter-spacing:.06em;font-weight:800}
 .td h2{margin:6px 0 0}
 .td-stop{margin:0;font-size:12px;font-weight:800;color:#6b3fb5;background:#ead9ff;padding:4px 12px;border-radius:999px}
 .td-desc{margin:0;font-size:14px;line-height:1.7;color:var(--ink)}
-.hist{max-height:52vh;overflow:auto;display:flex;flex-direction:column;gap:3px;font-size:12.5px}
-.hist-row{padding:5px 8px;border-radius:8px;background:#f5f7fc;line-height:1.5}
-.hist-row b{display:inline-block;min-width:4.5em;margin-right:6px;font-size:11px}
-.hist-row.c0{background:#fdefeb}
-.hist-row.c0 b{color:var(--p0)}
-.hist-row.c1{background:#ecf4fb}
-.hist-row.c1 b{color:var(--p1)}
+.hist{max-height:56vh;overflow:auto;display:flex;flex-direction:column;gap:6px;font-size:12.5px}
+.hist-turn{padding:7px 9px;border-radius:10px;background:#f5f7fc;line-height:1.5}
+.hist-turn.c0{background:#fdefeb}
+.hist-turn.c1{background:#ecf4fb}
+.hi-head{display:flex;align-items:baseline;gap:7px;font-size:11.5px;color:var(--muted);margin-bottom:3px}
+.hi-head b{font-size:13px;color:var(--ink)}
+.hi-roll{margin-left:auto;font-weight:800}
+.hi-row{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:1px 0}
+.hi-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hi-row b{flex:none;font-variant-numeric:tabular-nums}
+.hi-sum{margin-top:4px;padding-top:4px;border-top:1px dashed rgba(0,0,0,.15);font-size:11.5px;color:var(--muted)}
+.hist .up{color:#12764a}
+.hist .down{color:#c33}
 .res-tbl{width:100%;border-collapse:collapse;font-size:13.5px}
 .res-tbl th,.res-tbl td{padding:6px 4px;border-bottom:1px solid var(--line)}
 .res-tbl th{text-align:left;font-weight:700;color:var(--muted)}
@@ -417,6 +429,29 @@ h1{font-size:34px;margin:6px 0 0;letter-spacing:.06em;font-weight:800}
 .rules table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
 .rules th,.rules td{border-bottom:1px solid var(--line);padding:7px 4px;text-align:left;vertical-align:top}
 .rules th{white-space:nowrap;padding-right:10px}
+.reel-modal .modal-card{align-items:center;text-align:center;border:3px solid #e08a2e}
+.reel-window{
+  position:relative; width:100%; height:92px; overflow:hidden; border-radius:14px;
+  background:linear-gradient(180deg,#fff6e8,#ffe9cc);
+  box-shadow:inset 0 3px 10px rgba(120,80,20,.22);
+}
+.reel-strip{display:flex;gap:8px;padding:8px;position:absolute;left:0;top:0;will-change:transform}
+.reel-card{
+  flex:none; width:104px; height:76px; padding:5px 4px; border-radius:11px; text-align:center;
+  background:linear-gradient(180deg,#fff,#fff3e0); border:2px solid #f0c48a;
+  box-shadow:0 2px 0 #e2b070; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+}
+.reel-card .ri{font-size:22px;line-height:1}
+.reel-card .rn{font-size:9px;font-weight:800;line-height:1.25;color:#7a5a20}
+.reel-mark{
+  position:absolute; left:50%; top:0; bottom:0; width:3px; margin-left:-1.5px;
+  background:rgba(224,90,46,.85); box-shadow:0 0 8px rgba(224,90,46,.6);
+}
+.reel-mark::before,.reel-mark::after{
+  content:""; position:absolute; left:-6px; border:7px solid transparent;
+}
+.reel-mark::before{top:-2px;border-top-color:#e05a2e}
+.reel-mark::after{bottom:-2px;border-bottom-color:#e05a2e}
 .card-pop{position:fixed;inset:0;z-index:78;display:flex;align-items:center;justify-content:center;pointer-events:none;background:rgba(25,30,45,.35)}
 .cp-card{
   width:min(84vw,300px); padding:18px 18px 22px; text-align:center;
@@ -606,7 +641,7 @@ h1{font-size:34px;margin:6px 0 0;letter-spacing:.06em;font-weight:800}
 <!-- できごとの履歴 -->
 <div class="modal" id="historyModal">
   <div class="modal-card">
-    <h2>できごとの履歴</h2>
+    <h2>履歴</h2>
     <div class="hist" id="histList"></div>
     <button class="btn btn-ghost" data-close>とじる</button>
   </div>
@@ -629,7 +664,7 @@ h1{font-size:34px;margin:6px 0 0;letter-spacing:.06em;font-weight:800}
     <h2>メニュー</h2>
     <p class="menu-code" id="menuCode"></p>
     <button class="btn btn-ghost" data-open="rulesModal">ルール</button>
-    <button class="btn btn-ghost" id="historyBtn">できごとの履歴</button>
+    <button class="btn btn-ghost" id="historyBtn">履歴（ターンごとの収支）</button>
     <button class="btn btn-ghost" id="soundBtn">効果音：ON</button>
     <button class="btn btn-ghost danger" id="leaveBtn">ロビーにもどる</button>
     <button class="link" data-close>とじる</button>
@@ -648,7 +683,7 @@ h1{font-size:34px;margin:6px 0 0;letter-spacing:.06em;font-weight:800}
     </ol>
     <table>
       <tr><th>給料日</th><td>職業の給料がもらえます（子どもがいると手当も）。<b>通りすぎてももらえ、ちょうど止まると2倍</b></td></tr>
-      <tr><th>🎴 カード</th><td>ハプニングカードを1枚引きます（全22種類）。毎回ちがう出来事が起きます</td></tr>
+      <tr><th>🎴 カード</th><td>流れてくるカードを「ストップ」で止めて1枚引きます。<span id="cardListText"></span></td></tr>
       <tr><th>🌉 橋</th><td>最初にわたった人が持ち主。あとから通った人は通行料20万円をはらいます</td></tr>
       <tr><th>💳 借金</th><td>お金が足りないときは自動で銀行から借ります。決算日に利息1割をつけて返します</td></tr>
       <tr><th>🎊 決算日</th><td>ゴール前の大きな精算。退職金・子どもからの仕送り・保険の満期金・ペット・持ち家の売却をまとめて受け取り、借金を返します</td></tr>
@@ -664,6 +699,17 @@ h1{font-size:34px;margin:6px 0 0;letter-spacing:.06em;font-weight:800}
     </table>
     <p class="howto">マスをタップすると、そのマスの内容が見られます。</p>
     <button class="btn btn-ghost" data-close>とじる</button>
+  </div>
+</div>
+
+<!-- ハプニングカードを止める -->
+<div class="modal reel-modal" id="reelModal">
+  <div class="modal-card">
+    <div class="cm-icon">🎴</div>
+    <h2>ハプニングカード</h2>
+    <p class="cm-sub" id="reelSub">カードが流れています。好きなところで止めてね</p>
+    <div class="reel-window"><div class="reel-strip" id="reelStrip"></div><div class="reel-mark"></div></div>
+    <button class="btn btn-gold" id="reelStop">🛑 ストップ！</button>
   </div>
 </div>
 
@@ -880,6 +926,7 @@ function newState(name0) {
     anim: null, animId: 0, moving: false, remain: 0, pending: null, event: null, log: [],
     goals: 0, result: null, wins: [0, 0], draws: 0,
     deck: shuffledDeck(), deckPos: 0, bridge: null,
+    history: [], turnRec: null, netMark: null, turnNo: 0,
   };
 }
 function startGame(s) {
@@ -895,6 +942,7 @@ function startGame(s) {
   s.anim = null; s.moving = false; s.pending = null; s.event = null;
   s.log = []; s.goals = 0; s.result = null;
   s.deck = shuffledDeck(); s.deckPos = 0; s.bridge = null;
+  s.history = []; s.turnRec = null; s.netMark = null; s.turnNo = 0;
   s.turnId++;
 }
 const other = i => 1 - i;
@@ -911,11 +959,11 @@ function targetOf(from, steps) {
   return to;
 }
 const STEP_MS = 360;          // 1マス歩くのにかかる時間
-const WHEEL_MS = 2100;        // ルーレットが止まるまで
+const WHEEL_MS = 2900;        // ルーレットが止まるまで（最後はゆっくり止まる）
 function animMs(anim) {
   if (!anim) return 0;
   const steps = Math.abs(anim.to - anim.from);
-  return (anim.wheel ? WHEEL_MS : anim.pause ? 1300 : 300) + steps * STEP_MS + 260;
+  return (anim.wheel ? WHEEL_MS : anim.pause ? 1600 : 300) + steps * STEP_MS + 260;
 }
 
 /* ================= 行動（ホストが処理） ================= */
@@ -932,6 +980,8 @@ function applyAction(s, actor, a, host) {
     if (s.pending || actor !== s.current) return null;
     const v = wheelSpin();
     s.event = null;
+    s.turnRec = { no: ++s.turnNo, p: actor, roll: v, items: [] };   // このターンの記録
+    s.netMark = s.players.map(pl => pl.money - pl.debt);
     return moveStep(s, actor, v, { wheel: v });
   }
   if (a.type === 'back') {                       // 選びなおす
@@ -944,6 +994,7 @@ function applyAction(s, actor, a, host) {
     if (!s.pending || s.pending.p !== actor) return null;
     const opt = s.pending.options.find(o => o.id === a.id);
     if (!opt) return null;
+    if (s.pending.kind === 'reel') { s.pending = null; return drawCard(s, actor); }  // カードを止めた
     if (s.pending.spin) return doSpinFor(s, actor, s.pending.spin);   // 自分でルーレットを回す
     const snap = JSON.stringify({ players: s.players, pending: s.pending, event: s.event, log: s.log });
     const res = resolveChoice(s, actor, opt.id);
@@ -951,6 +1002,35 @@ function applyAction(s, actor, a, host) {
     return res;
   }
   return null;
+}
+
+// ハプニングカードを1枚引く
+function drawCard(s, i) {
+  const p = s.players[i];
+  const idx = s.deck[s.deckPos % s.deck.length];
+  const c = CARDS[idx];
+  s.deckPos++;
+  const ls = c.t ? [c.t] : [];
+  if (perkOf(p) === 'medic' && c.tag === 'health') ls.push('医者だから自分で治した ✨');
+  else if (c.m) money(s, i, c.m, ls);
+  if (c.pay) { money(s, i, -c.pay, ls); s.players[other(i)].money += c.pay; ls.push('相手にわたした'); }
+  if (c.get) { money(s, i, c.get, ls); money(s, other(i), -c.get, []); }
+  ev(s, i, c.i, c.n, ls);
+  s.event.big = true;
+  s.event.cardIdx = idx;
+  if (c.spinX) {
+    const res = askSpin(s, i, c.i, c.n, `自分でルーレットを回す。出た目×${c.spinX}万円`, { kind: 'card', x: c.spinX, icon: c.i, title: c.n });
+    s.event = { p: i, icon: c.i, title: c.n, lines: ls.concat([`ルーレットを回して金額を決める（出た目×${c.spinX}万円）`]), big: true, cardIdx: idx };
+    return res;
+  }
+  if (c.move) {
+    if (c.move > 0) return moveStep(s, i, c.move, { pause: true });
+    s.remain = 0;
+    s.anim = { id: ++s.animId, wheel: 0, from: p.pos, to: Math.max(0, p.pos + c.move), p: i, pause: true };
+    s.moving = true;
+    return { changed: true, land: true };
+  }
+  return { changed: true };
 }
 
 // 「自分でルーレットを回して決める」イベント
@@ -1041,7 +1121,7 @@ function land(s) {
     let icon = tile.i, title = tile.n;
     if (tile.t === 'salary') {
       const r = salaryPay(s, a.p);
-      if (r) { lines.push(...r.lines, `<span class="up">+${r.pay}万</span>`); title = `給料日（${JOBS[p.job].n}）`; }
+      if (r) { lines.push(...r.lines); title = `給料日（${JOBS[p.job].n}）`; }
       else lines.push('まだ働いていないのでナシ…');
     } else if (tile.t === 'stockresult') {
       if (p.stock) { p.stock = false; const v = wheelSpin() * 4; money(s, a.p, v, lines); title = '株を売った'; }
@@ -1062,6 +1142,13 @@ function land(s) {
 
 const BIG_EVENTS = ['結婚式！', '決算日', 'ゴール！'];
 function ev(s, p, icon, title, lines) {
+  // ターン記録（出目・止まったマス・増減）をためる
+  if (s.turnRec && s.netMark) {
+    const now = s.players.map(pl => pl.money - pl.debt);
+    const d = now[s.turnRec.p] - s.netMark[s.turnRec.p];
+    s.turnRec.items.push({ t: title, d });
+    s.netMark = now;
+  }
   s.event = { p, icon, title, lines };
   if (BIG_EVENTS.includes(title) || title.startsWith('子どもが生まれた') || title.endsWith('になった！')) s.event.big = true;
   lines.forEach(l => addLog(s, p, l.replace(/<[^>]+>/g, '')));
@@ -1103,7 +1190,7 @@ function salaryPay(s, i, exact) {
     lines.push(`子ども手当 +${p.kids * per}万`);
   }
   if (exact) { pay *= 2; lines.push('ちょうど止まったので給料2倍！🎉'); }
-  p.money += pay;
+  money(s, i, pay, lines);          // 借金があれば、ここで自動的に返済される
   return { pay, lines };
 }
 
@@ -1164,7 +1251,7 @@ function resolveTile(s, i) {
     case 'salary': {
       const r = salaryPay(s, i, true);      // ちょうど止まったら2倍
       if (!r) { ev(s, i, '💰', '給料日', ['まだ働いていないのでナシ…']); break; }
-      ev(s, i, '💰', `給料日（${JOBS[p.job].n}）`, r.lines.concat([`<span class="up">+${r.pay}万</span>`]));
+      ev(s, i, '💰', `給料日（${JOBS[p.job].n}）`, r.lines);
       break;
     }
     case 'raise': {
@@ -1203,7 +1290,15 @@ function resolveTile(s, i) {
       s.moving = true;
       return { changed: true, land: true };
     }
-    case 'card': {
+    case 'card': {                      // 流れてくるカードを自分で止める
+      s.pending = {
+        p: i, kind: 'reel', icon: '🎴', title: 'ハプニングカード',
+        options: [{ id: 'stop', label: '🛑 ストップ！', sub: '流れているカードを止める' }],
+      };
+      s.event = { p: i, icon: '🎴', title: 'ハプニングカード', lines: ['カードが流れています。好きなところで止めてね'] };
+      return { changed: true, wait: true };
+    }
+    case '__card_draw': {
       const c = CARDS[s.deck[s.deckPos % s.deck.length]];
       s.deckPos++;
       const ls = c.t ? [c.t] : [];
@@ -1306,7 +1401,7 @@ function resolveTile(s, i) {
         p: i, icon: '🎓', title: '進路をえらぶ',
         desc: 'これからの人生を左右する選択',
         options: [
-          { id: 'uni', label: '進学する（-120万）', sub: '入学金と授業料で120万。足りなければ奨学金（借金）。医者・弁護士など給料の高い職業から選べる' },
+          { id: 'uni', label: '進学する（-80万）', sub: '入学金と授業料で80万。足りなければ奨学金（借金）。医者・弁護士など給料の高い職業から選べる' },
           { id: 'work', label: 'すぐ働く（+20万）', sub: '就職祝い金が20万。借金なしで、すぐ給料がはじまる' },
         ],
       };
@@ -1436,7 +1531,7 @@ function resolveChoice(s, i, id) {
           p: i, icon: '🎓', title: '職業をえらぶ',
           options: pick.map(k => ({ id: 'job' + k, label: `${JOBS[k].n}（給料 ${JOBS[k].s}万）`, sub: '✨ ' + JOBS[k].pd })),
         };
-        s.event = { p: i, icon: '🎓', title: '進学した', lines: ['入学金と授業料 <span class="down">-120万</span>', p.debt ? `奨学金（借金）${p.debt}万をかかえてのスタート` : '', '給料の高い職業を3つから選べる'].filter(Boolean) };
+        s.event = { p: i, icon: '🎓', title: '進学した', lines: ['入学金と授業料 <span class="down">-80万</span>', p.debt ? `奨学金（借金）${p.debt}万をかかえてのスタート` : '', '給料の高い職業を3つから選べる'].filter(Boolean) };
         return { changed: true, wait: true };
       }
       p.money += 20;
@@ -1468,7 +1563,7 @@ function resolveChoice(s, i, id) {
       ev(s, i, '🏠', `${h.n}を買った`, [
         perkOf(p) === 'builder' ? '大工なので2割引 ✨' : '',
         `<span class="down">-${price}万</span>`,
-        '「家を売る」マスで精算',
+        '決算日に売って精算する',
       ].filter(Boolean));
       break;
     }
@@ -1530,6 +1625,17 @@ function drawTwo(pool, n = 3) {
 
 /* ターンの終わり・精算 */
 function endTurn(s) {
+  if (s.turnRec) {                       // 1ターンぶんの記録を残す
+    if (s.netMark) {
+      const now = s.players.map(pl => pl.money - pl.debt);
+      const d = now[s.turnRec.p] - s.netMark[s.turnRec.p];
+      if (d) s.turnRec.items.push({ t: 'そのほか', d });
+      s.netMark = now;
+    }
+    s.history.push(s.turnRec);
+    if (s.history.length > 80) s.history.shift();
+    s.turnRec = null;
+  }
   s.turnId++;
   if (s.players[0].goal && s.players[1].goal) { finish(s); return; }
   const nx = other(s.current);
@@ -1659,9 +1765,9 @@ function tileShort(t) {
     case 'pay': return t.why || '';
     case 'start': return '所持金30万円でここから出発';
     case 'goal': return '1着なら+50万円、2着なら+20万円';
-    case 'card': return '1枚引く。何が起きるかはお楽しみ';
+    case 'card': return '流れるカードをストップで止めて1枚引く';
     case 'salary': return '給料と手当をもらう。ちょうど止まると2倍';
-    case 'career': return '進学（-120万円・借金してもよい）か、すぐ働く（+20万円）';
+    case 'career': return '進学（-80万円・借金してもよい）か、すぐ働く（+20万円）';
     case 'insurance': return '保険料20万円。事故や入院が半額になり、決算日に15万円戻る';
     case 'marry': return 'するか選ぶ。式-50万円・ご祝儀+10万円・給料日+4万円・子どもが生まれる／しないなら決算日+90万円';
     case 'pet': return '迎えるか選ぶ。20万円。決算日にいやしボーナス+25万円';
@@ -1687,11 +1793,11 @@ function tileDesc(t) {
     case 'trouble': return (t.why ? t.why + 'として ' : '') + `${-t.m}万円 はらう（保険に入っていれば半額の ${Math.round(-t.m / 2)}万円）`;
     case 'pay': return (t.why ? t.why + '。' : '') + `相手に ${t.m}万円 わたす`;
     case 'salary': return '職業の給料がもらえる（通りすぎてももらえる）。子どもがいれば1人につき+5万円の手当つき。ちょうど止まると給料が2倍！';
-    case 'card': return 'ハプニングカードを1枚引く。何が起きるかは引いてみてのお楽しみ（全22種類）';
+    case 'card': return '流れてくるハプニングカードを「ストップ」で止めて1枚引く（全22種類）';
     case 'bridge': return '最初にわたった人がこの橋の持ち主になる。あとから通った人は通行料20万円を持ち主にはらう';
     case 'settle': return 'ゴール前の大きな精算。退職金＋子どもからの仕送り（1人30万円）＋保険の満期金（入っていれば30万円）をもらい、借金を利息1割で返す';
     case 'raise': return 'これから給料日ごとに +5万円';
-    case 'career': return '「進学（-30万円）」か「すぐ働く（+20万円）」を選ぶ。進学すると給料の高い職業から選べる';
+    case 'career': return '「進学（-80万円）」か「すぐ働く（+20万円）」を選ぶ。進学すると給料の高い職業から選べる（お金が足りなければ奨学金として借りられる）';
     case 'insurance': return '保険に入るか選ぶ。保険料は20万円。事故・入院などの支払いが半額になり、決算日に満期金30万円が戻ってくる';
     case 'marry': return '結婚するかを選ぶ。するなら式の費用 -50万円、ご祝儀 +10万円、給料日ごとに「共働き」+4万円、このあと子どもが生まれて老後に仕送りが届く。しないなら決算日に「ひとりの時間を満喫」+90万円（このマスは1回だけ）';
     case 'pet': return 'ペットを迎えるかを選ぶ。飼育用品と初期費用に20万円。決算日に「いやしボーナス」+40万円';
@@ -1810,12 +1916,13 @@ let famKey = ['', ''];
 function renderFamily() {
   [0, 1].forEach(i => {
     const p = state.players[i];
-    const key = (p.married ? 'm' : '') + p.kids;
+    const key = (p.married ? 'm' : '') + p.kids + (p.pet ? 'p' : '');
     if (key === famKey[i]) return;
     famKey[i] = key;
     let h = personHTML('');
     if (p.married) h += personHTML('spouse');
     for (let k = 0; k < p.kids; k++) h += personHTML('kid');
+    if (p.pet) h += '<div class="petwalk">🐕</div>';
     $('#fam' + i).innerHTML = h;
   });
 }
@@ -1885,9 +1992,13 @@ function renderTop() {
     const mEl = c.querySelector('.pc-money');
     mEl.innerHTML = `${p.money < 0 ? '−' : ''}${Math.abs(p.money)}<small>万円</small>`;
     mEl.classList.toggle('minus', p.money < 0);
-    c.querySelector('.pc-job').textContent = p.job === null
-      ? '💼 職業はまだ'
-      : `💼 ${JOBS[p.job].n}　給料 ${JOBS[p.job].s + p.raise}万`;
+    if (p.job === null) c.querySelector('.pc-job').textContent = '💼 職業はまだ';
+    else {
+      const base = JOBS[p.job].s + p.raise;
+      const extra = (p.married ? 4 : 0) + p.kids * (JOBS[p.job].perk === 'nanny' ? 6 : 3);
+      c.querySelector('.pc-job').textContent =
+        `💼 ${JOBS[p.job].n}　給料 ${base}万${extra ? `＋手当 ${extra}万` : ''}`;
+    }
     const bg = [];
     if (p.job !== null) bg.push(`<span class="bg perk">✨ ${esc(JOBS[p.job].ps)}</span>`);
     bg.push(p.insurance
@@ -1981,8 +2092,8 @@ function renderTray() {
     : s.pending ? (canChoose() ? `${who(s.pending.p)}：えらんでね` : `${who(s.pending.p)}が えらんでいます`)
     : `${who(s.current)}の番　ゴールまであと${left}マス`;
 
-  const e = (!animating && s.event) ? s.event : null;
-  $('#evTitle').innerHTML = e ? `<span class="ic">${e.icon}</span>${esc(e.title)}` : '';
+  const e = ((!animating || pauseShow) && s.event) ? s.event : null;
+  $('#evTitle').innerHTML = e ? `${pauseShow ? '<span class="pass-tag">通りがかり</span>' : ''}<span class="ic">${e.icon}</span>${esc(e.title)}` : '';
   $('#evLines').innerHTML = e ? e.lines.join('<br>') : '<span class="ev-hint">ルーレットを回して進もう</span>';
 
   const spinBtn = $('#spinBtn');
@@ -1990,9 +2101,25 @@ function renderTray() {
   spinBtn.hidden = fin;
   spinBtn.disabled = !canSpin();
   spinBtn.textContent = s.moving || animating ? '…' : 'ルーレットを回す';
+  // ハプニングカードのリール
+  const reelOn = !fin && !!s.pending && s.pending.kind === 'reel' && !animating;
+  if (reelOn) {
+    if (shownPending !== 'reel:' + s.turnId) {
+      shownPending = 'reel:' + s.turnId;
+      $('#reelSub').textContent = canChoose() ? 'カードが流れています。好きなところで止めてね' : `${who(s.pending.p)}が止めます…`;
+      $('#reelStop').disabled = !canChoose();
+      $('#reelModal').classList.add('open');
+      startReel();
+    }
+  } else if ($('#reelModal').classList.contains('open') && !(s.event && s.event.cardIdx !== undefined && !reelStopped)) {
+    if (reelStopped) { /* 止まる演出の途中 */ } else $('#reelModal').classList.remove('open');
+  }
+  if (!reelOn && s.event && s.event.cardIdx !== undefined && !reelStopped && $('#reelModal').classList.contains('open')) {
+    stopReel(s.event.cardIdx);
+  }
   // 選択は画面の中央に大きく出す
   const cm = $('#choiceModal');
-  if (showChoice) {
+  if (showChoice && !reelOn) {
     const mine = canChoose();
     if (shownPending !== s.pending.title + ':' + s.turnId) {
       shownPending = s.pending.title + ':' + s.turnId;
@@ -2008,7 +2135,7 @@ function renderTray() {
     $('#cmWait').textContent = mine ? '' : `${who(s.pending.p)}が えらんでいます…`;
     cm.classList.add('open');
   } else {
-    shownPending = '';
+    if (!reelOn) shownPending = '';
     cm.classList.remove('open');
   }
   $('#resultBtn').hidden = !fin;
@@ -2034,6 +2161,7 @@ function clearAnim() {
   animTimers.forEach(t => clearTimeout(t));
   animTimers = [];
   animating = false;
+  pauseShow = false;
 }
 const later = (fn, ms) => animTimers.push(setTimeout(fn, ms));
 function playAnim(a) {
@@ -2041,8 +2169,15 @@ function playAnim(a) {
   animating = true;
   tokenPos = [state.players[0].pos, state.players[1].pos];
   tokenPos[a.p] = a.from;
-  let t = a.wheel ? WHEEL_MS : a.pause ? 1300 : 300;
+  let t = a.wheel ? WHEEL_MS : a.pause ? 1600 : 300;
   if (a.wheel) spinWheel(a.wheel);
+  if (a.pause) {                       // 通りがかりのできごとを見せてから歩きだす
+    pauseShow = true;
+    shownBig = 'skip:' + (state.event ? state.event.title : '');  // 大きなカードは出さない
+    renderTray();
+    flashEvent();
+    later(() => { pauseShow = false; }, t - 120);
+  }
   const dir = a.to >= a.from ? 1 : -1;
   const steps = Math.abs(a.to - a.from);
   const wk = walkers[a.p];
@@ -2066,17 +2201,68 @@ function playAnim(a) {
 }
 function spinWheel(v) {
   $('#wheelVal').textContent = '';
-  const target = -( (v - 1) * 36 + 18 );
-  wheelDeg += 360 * 4 + (((target - wheelDeg) % 360) + 360) % 360;
+  const target = -((v - 1) * 36 + 18);
+  wheelDeg += 360 * 6 + (((target - wheelDeg) % 360) + 360) % 360;
   wheelEl.style.transform = `rotate(${wheelDeg}deg)`;
-  for (let k = 0; k < 12; k++) later(() => sfx.tick(), 60 + k * 100);
-  later(() => { $('#wheelVal').textContent = v; }, WHEEL_MS - 100);
+  // カチカチ音も、だんだんゆっくりになる
+  let t = 80;
+  for (let gap = 70; t < WHEEL_MS - 120; gap *= 1.22) { const at = t; later(() => sfx.tick(), at); t += gap; }
+  later(() => { $('#wheelVal').textContent = v; sfx.step(); }, WHEEL_MS - 90);
 }
+/* ---------- ハプニングカードのリール ---------- */
+const REEL_W = 112;                       // カード1枚ぶんの幅（カード104＋すきま8）
+let reelTimer = 0, reelPos = 0, reelItems = [], reelStopped = false;
+function reelCardHTML(c) {
+  return `<div class="reel-card"><span class="ri">${c.i}</span><span class="rn">${esc(c.n)}</span></div>`;
+}
+function startReel() {
+  const strip = $('#reelStrip');
+  reelItems = [];
+  for (let k = 0; k < 40; k++) reelItems.push(CARDS[Math.floor(Math.random() * CARDS.length)]);
+  strip.innerHTML = reelItems.map(reelCardHTML).join('');
+  reelPos = 0;
+  reelStopped = false;
+  strip.style.transition = 'none';
+  strip.style.transform = 'translateX(0)';
+  clearInterval(reelTimer);
+  let speed = 9;
+  reelTimer = setInterval(() => {                 // どんどん流れる
+    reelPos -= speed;
+    if (-reelPos > REEL_W * 20) {                 // 端まで来たら先頭にもどす
+      reelPos += REEL_W * 20;
+    }
+    strip.style.transform = `translateX(${reelPos}px)`;
+  }, 16);
+}
+// 出たカードのところでゆっくり止まる
+function stopReel(cardIdx) {
+  if (reelStopped) return;
+  reelStopped = true;
+  clearInterval(reelTimer);
+  const strip = $('#reelStrip'), win = $('.reel-window');
+  const center = win.clientWidth / 2 - REEL_W / 2 - 8;
+  const nowIndex = Math.round((-reelPos + center) / REEL_W);
+  const targetIndex = nowIndex + 7;               // 7枚先で止める
+  if (reelItems[targetIndex]) {
+    reelItems[targetIndex] = CARDS[cardIdx];
+    strip.children[targetIndex].outerHTML = reelCardHTML(CARDS[cardIdx]);
+  }
+  const target = -(targetIndex * REEL_W) + center;
+  strip.style.transition = 'transform 1.9s cubic-bezier(.05,.75,.1,1)';
+  strip.style.transform = `translateX(${target}px)`;
+  reelPos = target;
+  for (let k = 0, t = 60; t < 1800; k++, t += 60 + k * 26) later(() => sfx.tick(), t);
+  $('#reelSub').textContent = 'どのカードかな…';
+  $('#reelStop').disabled = true;
+  later(() => { $('#reelModal').classList.remove('open'); }, 2200);
+}
+
 // ハプニングカードを大きく見せる
-let shownBig = '', shownPending = '';
+let shownBig = '', shownPending = '', pauseShow = false;
 function showBigEvent() {
   const e = state && state.event;
-  const key = e && e.big ? state.turnId + ':' + e.title + ':' + e.p : '';
+  if (animating || pauseShow) return;               // 歩いている間は出さない
+  const key = e && e.big ? state.turnId + ':' + e.title + ':' + e.p + ':' + (state.animId || 0) : '';
   if (!key || key === shownBig) return;
   shownBig = key;
   $('#cpHead').textContent = e.card === false || BOARD[state.players[e.p].pos].t !== 'card' ? 'できごと' : 'ハプニングカード';
@@ -2179,12 +2365,12 @@ function openModal(id) {
   }
   $('#' + id).classList.add('open');
 }
-function closeModals() { document.querySelectorAll('.modal.open:not(.choice-modal)').forEach(m => m.classList.remove('open')); }
+function closeModals() { document.querySelectorAll('.modal.open:not(.choice-modal):not(.reel-modal)').forEach(m => m.classList.remove('open')); }
 $('#cardPop').addEventListener('click', () => { $('#cardPop').hidden = true; });
 document.addEventListener('click', e => {
   const o = e.target.closest('[data-open]');
   if (o) { closeModals(); openModal(o.dataset.open); return; }
-  if (e.target.closest('[data-close]') || (e.target.classList.contains('modal') && !e.target.classList.contains('choice-modal'))) closeModals();
+  if (e.target.closest('[data-close]') || (e.target.classList.contains('modal') && !e.target.classList.contains('choice-modal') && !e.target.classList.contains('reel-modal'))) closeModals();
 });
 
 /* ================= 操作と進行 ================= */
@@ -2243,6 +2429,11 @@ function spin() {
 $('#spinBtn').addEventListener('click', spin);
 $('#findMe').addEventListener('click', () => { if (state) keepInView(state.players[viewer()].pos, true); });
 $('#backBtn').addEventListener('click', () => { if (canChoose()) { shownPending = ''; dispatch({ type: 'back' }); } });
+$('#reelStop').addEventListener('click', () => {
+  if (!canChoose() || reelStopped) return;
+  $('#reelStop').disabled = true;
+  dispatch({ type: 'choice', id: 'stop' });
+});
 $('#choices').addEventListener('click', e => {
   const b = e.target.closest('button[data-choice]');
   if (!b || b.disabled || !canChoose()) return;
@@ -2263,9 +2454,21 @@ $('#stamps').addEventListener('click', e => {
 });
 $('#historyBtn').addEventListener('click', () => {
   if (!state) return;
-  const rows = state.log.slice().reverse().map(l =>
-    `<div class="hist-row c${l.p}"><b>${esc(state.players[l.p].name || '')}</b>${esc(l.text)}</div>`).join('');
-  $('#histList').innerHTML = rows || '<div class="hist-row">まだ何も起きていません</div>';
+  const yen = v => (v > 0 ? '+' : '−') + Math.abs(v) + '万';
+  const rows = (state.history || []).slice().reverse().map(r => {
+    const gain = r.items.filter(x => x.d > 0).reduce((a, b) => a + b.d, 0);
+    const loss = r.items.filter(x => x.d < 0).reduce((a, b) => a + b.d, 0);
+    const net = gain + loss;
+    const items = r.items.length
+      ? r.items.map(x => `<div class="hi-row"><span>${esc(x.t)}</span><b class="${x.d > 0 ? 'up' : x.d < 0 ? 'down' : ''}">${x.d ? yen(x.d) : '±0'}</b></div>`).join('')
+      : '<div class="hi-row"><span>なにも起きなかった</span><b>±0</b></div>';
+    return `<div class="hist-turn c${r.p}">
+        <div class="hi-head"><b>${r.no}ターン目</b><span>${esc(state.players[r.p].name || '')}</span><span class="hi-roll">🎡 出目 ${r.roll}</span></div>
+        ${items}
+        <div class="hi-sum">もらった <b class="up">+${gain}万</b>　はらった <b class="down">−${Math.abs(loss)}万</b>　差し引き <b class="${net > 0 ? 'up' : net < 0 ? 'down' : ''}">${net ? yen(net) : '±0万'}</b></div>
+      </div>`;
+  }).join('');
+  $('#histList').innerHTML = rows || '<div class="hist-turn">まだ1ターンも終わっていません</div>';
   closeModals();
   openModal('historyModal');
 });
@@ -2304,6 +2507,8 @@ function resetUi() {
   clearTimeout(landTimer);
   closeModals();
   shownAnimId = 0; resultShownFor = -1; lastTurnKey = ''; famKey = ['', ''];
+  clearInterval(reelTimer); reelStopped = false; shownPending = '';
+  $('#reelModal').classList.remove('open');
   busy = false; wasLost = false;
   lastMoney = [START_MONEY, START_MONEY];
 }
@@ -2642,6 +2847,7 @@ function updateTrayHeight() {
 if (window.ResizeObserver) new ResizeObserver(updateTrayHeight).observe($('#tray'));
 window.addEventListener('resize', updateTrayHeight);
 
+$('#cardListText').textContent = `全${CARDS.length}種類：` + CARDS.map(c => c.n).join('／');
 refreshLobby();
 })();
 </script>
