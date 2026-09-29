@@ -774,7 +774,7 @@ const SECOND_BONUS = 20;    // 後攻は先攻より少し多く持ってスタ�
 // お金の決まり。説明文もここから作るので、数字を変えるときはここだけ直す
 const R = {
   uni: 30, workGift: 20,            // 進学の費用、すぐ働くときの就職祝い金
-  ins: 20, insBack: 8,            // 保険料、決算日の満期金
+  ins: 16, insBack: 8,           // 保険料、決算日の満期金
   car: 25, carX: 5,                  // 車の値段、売るときは出た目×carX
   stock: 20, stockX: 4,              // 株の値段、売るときは出た目×stockX
   pet: 20, petBack: 22,             // ペットの費用、決算日のいやしボーナス
@@ -786,6 +786,7 @@ const R = {
   goal1: 50, goal2: 30,              // ゴールボーナス 1着／2着
   goalX: 2,                          // 先にゴールした人は、相手の手番のたびにルーレット×goalX万
   kidHit: 5,                         // 子どもがほしいとき、ルーレットで1〜kidHitが出たら生まれる
+  petHit: 5,                         // ペットを迎えたいとき、ルーレットで1〜petHitが出たら迎えられる
   archiX: 2,                         // 建築士は家を買値のarchiX倍で売る
   exact: 1.5,                        // 給料日にちょうど止まったときの倍率
 };
@@ -823,49 +824,49 @@ const BOARD = [
   GAIN('家庭教師のバイト代が入った', '✏️', 10, 'バイト代'),
   { t: 'career', n: '進路をえらぶ（進学か、就職か）', i: '🎓', stop: true, sn: '進路' },            // 12 STOP
   GAIN('年末ジャンボの3等が当たった！', '🎟', 30, '当せん金'),
-  LOSS('ひとり暮らしをはじめる', '🏚', 15, '敷金・礼金と家具代'),
-  CALMT('近所を散歩', '🚶'),                                                                          // 15
   { t: 'insurance', n: '保険にはいる？', i: '🛡', sn: '保険' },
+  LOSS('ひとり暮らしをはじめる', '🏚', 15, '敷金・礼金と家具代'),                                    // 15
+  { t: 'raise', n: '簿記の資格をとった', i: '📗', m: 5, sn: '資格' },
+  CALMT('近所を散歩', '🚶'),
   CARD_TILE,
-  LOSS('インフルエンザで3日寝こんだ', '🤒', 6, '病院代と薬代', 'health'),
   LOSS('文化祭の打ち上げ', '🎉', 6, '会費'),
   /* ---- 2. 社会に出る ---- */
   CARD_TILE,                                                                                          // 20
-  { t: 'raise', n: '簿記の資格をとった', i: '📗', m: 5, sn: '資格' },
-  GAIN('イベントスタッフの短期バイト', '🎪', 9, 'バイト代'),
+  Object.assign(LOSS('インフルエンザで3日寝こんだ', '🤒', 6, '病院代と薬代', 'health'), { ins: 'med', rest: true }),
   CALMT('平穏な一日', '🍵'),
-  GAIN('繁忙期の残業代が出た', '⏰', 12, '残業代'),
-  { t: 'move', n: '近道の裏通りを覚えた。少し先の平穏なマスまで進む', i: '⏩', s: 1, sn: 'すすむ' },   // 25
-  HIT('財布を落とした', '👛', 12, '中の現金と、カード再発行の手数料'),
+  GAIN('イベントスタッフの短期バイト', '🎪', 9, 'バイト代'),
+  { t: 'move', n: '近道の裏通りを覚えた。少し先の平穏なマスまで進む', i: '⏩', s: 1, sn: 'すすむ' },
+  CARD_TILE,                                                                                          // 25
+  CALMT('定時で帰れた', '🕔'),
   LOSS('友だちと沖縄へ3泊4日の旅行', '✈️', 12, '航空券とホテル代', 'trip'),
   SALARY_TILE,                                                                                        // 28
   GIVE('相手にランチをおごる', '🍛', 6, 'ランチ代を相手のぶんまで出す', 'treat'),
   GAIN('社内コンテストで最優秀賞', '🏆', 18, '賞金'),                                                 // 30
-  CARD_TILE,
+  GAIN('繁忙期の残業代が出た', '⏰', 12, '残業代'),
   LOSS('スーツを新調した', '👔', 12, 'スーツ代'),
-  CALMT('定時で帰れた', '🕔'),
   GAIN('ためたポイントを商品券に交換', '🎫', 6, '商品券'),
-  LOSS('スマホを機種変更した', '📱', 10, '端末代'),                                                   // 35
-  GAIN('会社の表彰で金一封', '🏅', 15, '金一封'),
+  LOSS('スマホを機種変更した', '📱', 10, '端末代'),
+  GAIN('会社の表彰で金一封', '🏅', 15, '金一封'),                                                     // 35
   LOSS('新しい部屋の家具をそろえた', '🛋', 14, '家具代'),
-  HIT('親知らずを抜いた', '🦷', 8, '抜歯の治療代', 'health'),
+  HIT('財布を落とした', '👛', 12, '中の現金と、カード再発行の手数料'),
+  Object.assign(HIT('親知らずを抜いた', '🦷', 8, '抜歯の治療代', 'health'), { ins: 'med' }),
   { t: 'jobchange', n: '転職のチャンス', i: '🔀', stop: true, sn: '転職' },                           // 39 STOP
   CALMT('休日に部屋をそうじ', '🧹'),                                                                  // 40
   LOSS('歓迎会の幹事をひきうけた', '🍻', 9, '会費の立てかえ'),
   GAIN('副業のイラストが売れた', '🎨', 10, '売上'),
   CARD_TILE,
-  HIT('エアコンが壊れた', '❄️', 11, '修理代'),
-  { t: 'again', n: '思いがけない3連休。もう一度まわす', i: '🔁', sn: 'もう1回' },                    // 45
   CALMT('通勤電車で座れた', '🚃'),
+  { t: 'again', n: '思いがけない3連休。もう一度まわす', i: '🔁', sn: 'もう1回' },                    // 45
+  HIT('エアコンが壊れた', '❄️', 11, '修理代'),
   { t: 'vs', n: 'ボウリング大会で相手と対決', i: '🎳', m: 20, sn: 'ボウリング', why: '勝ったほうが相手から賞金をもらう' },
   GAIN('積み立て預金が満期になった', '🏦', 14, '満期の元本と利息'),
   GAIN('資格手当がついた', '📘', 14, '半年ぶんの手当'),
-  { t: 'pet', n: 'ペットを迎える？', i: '🐶', sn: 'ペット' },                                         // 50
+  Object.assign(HIT('自転車で転んで骨折', '🩼', 20, '治療代と通院費', 'health'), { ins: 'med', rest: true }),   // 50
   LOSS('資格試験を受けた', '📝', 6, '受験料'),
   CARD_TILE,
-  GIVE('相手から借りた本をなくした', '📕', 7, '弁償代を相手にわたす'),
+  GIVE('相手から借りた本をなくした', '📕', 7, '弁償代を相手にわたす', 'comp'),
   CALMT('平穏な一日', '🍵'),
-  HIT('自転車で転んで骨折', '🩼', 20, '治療代と通院費', 'health'),                                   // 55
+  { t: 'pet', n: 'ペットを迎えたい？', i: '🐶', sn: 'ペット' },                                       // 55
   GAIN('写真コンテストで入賞', '📸', 8, '賞金'),
   GAIN('フリマアプリで断捨離', '📦', 22, '売上'),
   SALARY_TILE,                                                                                        // 58
@@ -879,52 +880,52 @@ const BOARD = [
   /* ---- 3. 家族ができる ---- */
   { t: 'marry', n: '結婚する？', i: '💒', stop: true, sn: '結婚' },                                   // 66 STOP
   LOSS('新婚旅行でハワイへ', '🏝', 15, '旅費とおみやげ代', 'trip'),
-  CALMT('家族で公園へ', '🌳'),
   { t: 'child', n: '第一子が生まれるかも', i: '👶', sn: '子ども' },
-  GAIN('家計を見直して節約できた', '📒', 10, '浮いた生活費'),                                         // 70
-  CARD_TILE,
-  LOSS('歯の矯正をはじめた', '🦷', 11, '矯正の初期費用'),
-  HIT('洗濯機が壊れた', '🧺', 13, '買いかえの費用'),
-  { t: 'car', n: '車を買う？', i: '🚗', sn: '車' },
-  GAIN('夏のボーナスが出た', '🎁', 25, '夏のボーナス', 'fame'),                                       // 75
+  CALMT('家族で公園へ', '🌳'),
+  CARD_TILE,                                                                                          // 70
+  GAIN('家計を見直して節約できた', '📒', 10, '浮いた生活費'),
   CALMT('みんなで夕ごはん', '🍚'),
-  GIVE('相手の家の新築祝い', '🏠', 10, 'お祝いを相手にわたす'),
-  { t: 'trouble', n: '駐車場で車をこすった', i: '🚧', m: -20, sn: '修理代', why: 'バンパーの修理代', needs: 'car', alt: { n: '自転車がパンクした', i: '🚲', m: -4, why: 'タイヤの修理代' } },
-  GAIN('昇格試験に合格した', '📈', 14, '昇格の一時金'),
+  CARD_TILE,
+  CALMT('休日にのんびり', '🛋'),
+  LOSS('歯の矯正をはじめた', '🦷', 11, '矯正の初期費用'),                                           // 75
+  { t: 'car', n: '車を買う？', i: '🚗', sn: '車' },
+  GAIN('夏のボーナスが出た', '🎁', 25, '夏のボーナス', 'fame'),
+  HIT('洗濯機が壊れた', '🧺', 13, '買いかえの費用'),
+  { t: 'trouble', n: '駐車場で車をこすった', i: '🚧', m: -20, sn: '修理代', why: 'バンパーの修理代', ins: 'car', needs: 'car', alt: { n: '自転車がパンクした', i: '🚲', m: -4, why: 'タイヤの修理代' } },
   SALARY_TILE,                                                                                        // 80
   { t: 'bridge', n: '新しい橋が開通した', i: '🌉', m: 10, sn: '橋', why: '橋の通行料' },
-  HIT('風邪をひいて寝こんだ', '🤧', 6, '病院代と薬代', 'health'),
-  CARD_TILE,
+  GIVE('相手の家の新築祝い', '🏠', 10, 'お祝いを相手にわたす'),
+  GAIN('昇格試験に合格した', '📈', 14, '昇格の一時金'),
   { t: 'child', n: '第二子が生まれるかも', i: '👶', sn: '子ども' },
-  LOSS('冠婚葬祭が重なった', '🎎', 12, 'ご祝儀と香典'),                                               // 85
-  CALMT('休日にのんびり', '🛋'),
+  Object.assign(HIT('風邪をひいて寝こんだ', '🤧', 6, '病院代と薬代', 'health'), { ins: 'med', rest: true }),   // 85
+  LOSS('冠婚葬祭が重なった', '🎎', 12, 'ご祝儀と香典'),
   { t: 'money', n: 'ベビーカーと子ども用品をそろえた', i: '🍼', m: -12, sn: '子ども用品', why: '用品代', needs: 'kids', alt: { n: '友だちの出産祝い', i: '🎀', m: -6, why: 'お祝いの品' } },
   GIVE('相手に夕食をおごる', '🍣', 8, '夕食代を相手のぶんまで出す', 'treat'),
   { t: 'vs', n: '運動会の保護者リレーで対決', i: '🏃', m: 20, sn: 'リレー', why: '勝ったほうが相手から賞金をもらう' },
   GAIN('町内会のくじで商品券', '🎫', 8, '商品券'),                                                    // 90
   { t: 'money', n: '七五三の記念撮影', i: '📸', m: -14, sn: '七五三', why: '撮影と衣装のレンタル代', needs: 'kids', alt: { n: '家族写真を撮った', i: '📸', m: -6, why: '撮影代' } },
-  HIT('水道管が凍って破裂した', '🚰', 14, '修理代'),
+  Object.assign(HIT('水道管が凍って破裂した', '🚰', 14, '修理代'), { ins: 'home' }),
   { t: 'house', n: 'マイホームを買う？', i: '🏠', stop: true, sn: 'マイホーム' },                   // 93 STOP
   LOSS('新居への引っ越し', '📦', 10, '引っ越し代と手続きの費用'),
-  CALMT('平穏な一日', '🍵'),                                                                          // 95
-  GAIN('週末の副業が口コミで繁盛', '💻', 20, '売上'),
-  GAIN('手作り雑貨がネットで売れた', '🧶', 11, '売上'),
-  { t: 'stock', n: '株を買う？', i: '📊', sn: '株' },
+  { t: 'stock', n: '株を買う？', i: '📊', sn: '株' },                                                 // 95
+  CALMT('平穏な一日', '🍵'),
   CARD_TILE,
+  GAIN('週末の副業が口コミで繁盛', '💻', 20, '売上'),
+  CALMT('定時で帰れた', '🕔'),
   /* ---- 4. 働きざかり ---- */
   LOSS('家族でキャンプへ', '⛺', 9, 'キャンプ場と道具代', 'trip'),                                   // 100
   { t: 'raise', n: 'もうひとつ資格をとった', i: '📗', m: 5, sn: '資格' },
-  GAIN('冬のボーナスが出た', '💴', 20, '冬のボーナス'),
-  CALMT('定時で帰れた', '🕔'),
-  HIT('ぎっくり腰で1週間入院', '🏥', 18, '入院費と差額ベッド代', 'health'),
-  GIVE('相手の家の窓ガラスを割った', '🪟', 12, '弁償代を相手にわたす'),                             // 105
+  GAIN('冬のボーナスが出た', '💴', 20, '冬のボーナス', 'fame'),
+  Object.assign(HIT('ぎっくり腰で1週間入院', '🏥', 18, '入院費と差額ベッド代', 'health'), { ins: 'med', rest: true }),
+  GIVE('相手の家の窓ガラスを割った', '🪟', 12, '弁償代を相手にわたす', 'comp'),
+  HIT('健康診断で再検査になった', '🩺', 7, '再検査の費用', 'health'),                                // 105
   SALARY_TILE,                                                                                        // 106
   GAIN('街頭インタビューでテレビに出た', '📺', 22, '出演料', 'fame'),
-  HIT('健康診断で再検査になった', '🩺', 7, '再検査の費用', 'health'),
+  CALMT('庭の手入れ', '🌱'),
   CARD_TILE,
   { t: 'money', n: '子どもの塾代', i: '✏️', m: -16, sn: '塾代', why: '半年ぶんの月謝', needs: 'kids', alt: { n: '習いごとをはじめた', i: '✏️', m: -8, why: '半年ぶんの月謝' } },   // 110
+  CALMT('近所を散歩', '🚶'),
   GAIN('臨時の特別手当が出た', '🏢', 15, '特別手当'),
-  CALMT('庭の手入れ', '🌱'),
   { t: 'vs', n: 'カラオケ大会で相手と対決', i: '🎤', m: 20, sn: 'カラオケ', why: '勝ったほうが相手から賞金をもらう' },
   LOSS('引っ越し祝いのお返し', '🎀', 6, 'お返しの品'),
   { t: 'trouble', n: '車の車検を受けた', i: '🔧', m: -14, sn: '車検', why: '車検と整備の費用', needs: 'car', alt: { n: '自転車の点検に出した', i: '🚲', m: -3, why: '点検と整備の費用' } },   // 115
@@ -939,24 +940,24 @@ const BOARD = [
   LOSS('親の還暦祝い', '🎎', 20, '旅行のプレゼント代'),
   CARD_TILE,                                                                                          // 125
   LOSS('人間ドックを受けた', '🏥', 8, '検査費用', 'health'),
-  GIVE('相手にお歳暮を贈る', '🎁', 8, 'お歳暮代を相手にわたす'),
-  { t: 'again', n: '有給をまとめて取れた。もう一度まわす', i: '🔁', sn: 'もう1回' },
   CALMT('平穏な一日', '🍵'),
+  { t: 'again', n: '有給をまとめて取れた。もう一度まわす', i: '🔁', sn: 'もう1回' },
+  GIVE('相手にお歳暮を贈る', '🎁', 8, 'お歳暮代を相手にわたす'),
   GAIN('長年の功績で社長賞', '🏅', 26, '報奨金', 'fame'),                                            // 130
   GAIN('講演を頼まれた', '🎙', 12, '講演料'),
-  HIT('台風で屋根が壊れた', '🌀', 22, '屋根の修理代'),
+  Object.assign(HIT('台風で屋根が壊れた', '🌀', 22, '屋根の修理代'), { ins: 'home' }),
   LOSS('親の様子を見に帰省が続いた', '🚅', 12, '交通費'),
   GAIN('ブログの広告収入が入った', '✍️', 10, '広告収入'),
   { t: 'money', n: '子どもの大学入学金', i: '🎓', m: -18, sn: '入学金', why: '入学金', needs: 'kids', alt: { n: '自分の学び直し講座', i: '🎓', m: -8, why: '受講料' } },   // 135
   GIVE('相手と飲みに行っておごった', '🍶', 10, '飲み代を相手のぶんまで出す', 'treat'),
   GAIN('家庭菜園が豊作で直売所デビュー', '🥬', 12, '売上'),
   HIT('雨漏りがした', '☔', 15, '修理代'),
-  CALMT('定時で帰れた', '🕔'),
+  GAIN('手作り雑貨がネットで売れた', '🧶', 11, '売上'),
   GAIN('昔集めた切手が高く売れた', '📮', 14, '売った代金'),                                          // 140
   GAIN('趣味の写真が雑誌に載った', '📷', 20, '掲載料'),
   LOSS('ゴルフの道具をそろえた', '⛳', 11, '道具代'),
   GAIN('趣味の陶芸が個展で売れた', '🏺', 18, '作品の売上'),
-  GAIN('会社の業績がよく決算賞与', '💹', 18, '決算賞与'),
+  GAIN('会社の業績がよく決算賞与', '💹', 18, '決算賞与', 'fame'),
   LOSS('同窓会の幹事をひきうけた', '🍶', 12, '会場費の立てかえ'),                                    // 145
   HIT('冷蔵庫が壊れた', '🧊', 13, '買いかえの費用'),
   /* ---- 5. そして老後へ ---- */
@@ -976,10 +977,13 @@ const BOARD = [
 ].map(t => Object.assign({}, t));
 const BOARD_LEN = BOARD.length;
 // その向きでいちばん近い「平穏」のマス。STOP やスタート・ゴールはまたがない
+// 通りすぎても起きるマス（給料日・子ども・保険・車・株・橋など）と資格マスもまたがない。
+// またぐと、進むときはそのマスを飛ばして損をし、もどるときはもう一度通って給料などを二重にもらえてしまうため
+const NO_JUMP = ['salary', 'bridge', 'stockresult', 'child', 'insurance', 'pet', 'car', 'stock', 'raise'];
 function calmNear(pos, dir) {
   for (let k = pos + dir; k > 0 && k < BOARD.length - 1; k += dir) {
     if (BOARD[k].t === 'calm') return k;
-    if (BOARD[k].stop) return null;
+    if (BOARD[k].stop || NO_JUMP.includes(BOARD[k].t)) return null;
   }
   return null;
 }
@@ -1016,11 +1020,11 @@ const JOBS = [
   { n: '料理人',   s: 32, perk: 'chef',    ps: 'おごりで得',    pd: '「おごる」マスで、はらうかわりに同じ額を相手からもらえる' },
   { n: '美容師',   s: 30, perk: 'wed',     ps: '結婚式が半額',  pd: `結婚式の費用が半額（-${R.wed / 2}万）` },
   { n: '大工',     s: 34, perk: 'builder', ps: '家が2割引',     pd: 'マイホームが2割引で買える（売るときは定価で計算）' },
-  { n: '消防士',   s: 33, perk: 'brave',   ps: '災難が半額',    pd: '財布・事故・入院などの支払いが半額' },
+  { n: '消防士',   s: 33, perk: 'brave',   ps: '災難が半額',    pd: '財布・事故・ケガ・家電の故障などの災難の支払いが半額' },
   { n: 'アイドル', s: 36, perk: 'star',    ps: 'テレビ2倍',     pd: 'テレビ出演・ボーナスのマスが2倍' },
   { n: 'ユーチューバー', s: 16, perk: 'gamble', ps: '給料が変動', pd: '給料日ごとにルーレット（+3〜30万の上乗せ）' },
   { n: '医者',     s: 44, uni: true, perk: 'medic',  ps: '病気タダ',   pd: 'カゼ・入院の支払いがタダ' },
-  { n: '弁護士',   s: 41, uni: true, perk: 'lawyer', ps: '支払い免除', pd: '相手にお金をはらうマスがタダ' },
+  { n: '弁護士',   s: 41, uni: true, perk: 'lawyer', ps: '弁償タダ', pd: '相手への弁償・賠償（窓ガラス・借りた本など）が話し合いでタダ' },
   { n: 'パイロット', s: 40, uni: true, perk: 'pilot', ps: '旅行タダ',  pd: '旅行・新婚旅行の費用がタダ' },
   { n: '建築士',   s: 38, uni: true, perk: 'archi',  ps: `家が${R.archiX}倍で売れる`, pd: `決算日に家を買値の${R.archiX}倍で売れる（ルーレットなし）` },
   { n: '研究者',   s: 37, uni: true, perk: 'study',  ps: '昇給3倍',    pd: '「資格」マスの昇給が3倍（+15万）' },
@@ -1054,7 +1058,7 @@ function newPlayer(name) {
   return {
     name, cid: null, pos: 0, money: START_MONEY, job: null, raise: 0,
     married: false, kids: 0, insurance: false, house: null, car: false, stock: false, pet: false,
-    goal: 0, uni: false, debt: 0, settled: false,
+    goal: 0, uni: false, debt: 0, settled: false, skip: 0,
   };
 }
 function shuffledDeck() {
@@ -1192,6 +1196,7 @@ function runNext(s, nx) {
     case 'jump': return jumpTo(s, i, nx.to);
     case 'ask': return askSpin(s, i, nx.icon, nx.title, nx.desc, nx.spin);
     case 'afterSpin': return afterSpin(s, i);
+    case 'rest': return { changed: true };            // 休みの番を終える（afterApply が endTurn を呼ぶ）
   }
   return { changed: true };
 }
@@ -1203,7 +1208,7 @@ function afterSpin(s, i) {
     return askSpin(s, n.p != null ? n.p : i, n.icon, n.title, n.desc, n.spin);
   }
   if (s.remain > 0) return moveStep(s, i, s.remain);
-  if (s.goalSpin) { s.goalSpin = false; return { changed: true, keep: true }; }   // ゴールした人のルーレットのあとは、手番の人が回す
+  if (s.goalSpin) s.goalSpin = false;            // ゴールした人のルーレットのあとは、そのままターンを終える
   return { changed: true };
 }
 
@@ -1323,6 +1328,19 @@ function doSpinFor(s, i, spin) {
       lines.splice(1, 0, `出た目×${R.goalX}万円`);
       title = `${pname(s, i)}のゴール後ルーレット`;
       s.goalSpin = true;
+      break;
+    }
+    case 'pet': {                                  // ペットを迎えたいとき、5割で迎えられる
+      if (v <= R.petHit) {
+        p.pet = true;
+        lines.push('飼育用品と初期費用');
+        money(s, i, -R.pet, lines);
+        lines.push(`決算日に いやしボーナス +${R.petBack}万`);
+        title = 'ペットを迎えた！';
+      } else {
+        title = '今回は縁がなかった';
+        lines.push(`1〜${R.petHit}なら迎えられるところだった。費用はかからない`);
+      }
       break;
     }
     case 'child': {                                // 子どもがほしいとき、5割で生まれる
@@ -1446,6 +1464,7 @@ function takeDebt(s, me) {
   const a = s.dnote[me], o = s.dnote[other(me)], out = {};
   if (a.b) out.b = a.b;
   if (a.r) out.r = a.r;
+  if (a.n) out.n = a.n;
   if (o.b) out.ob = o.b;
   if (o.r) out.or = o.r;
   s.dnote = [{ b: 0, r: 0 }, { b: 0, r: 0 }];
@@ -1494,11 +1513,15 @@ function salaryPay(s, i, exact, bonus) {
   return { pay, lines };
 }
 
+// 保険が効くマスの種類と、半額の計算（はらう額が多くなる側に丸める。3万の半分は2万）
+const INS_KIND = { med: '病気・ケガ', home: '住まいの災害', car: '車の事故' };
+const halfCost = a => -Math.round(Math.abs(a) / 2);
 // 車や子どもがいないときは、そのマスの内容を差しかえる
 function tileFor(t, p) {
   if (!t.needs || !t.alt) return t;
   const has = t.needs === 'car' ? p.car : t.needs === 'kids' ? p.kids > 0 : true;
-  return has ? t : Object.assign({}, t, t.alt);
+  // 差しかえるときは、元のマスの保険・休み・印は引き継がない（自転車の修理に自動車保険は効かない）
+  return has ? t : Object.assign({}, t, { ins: null, rest: false, tag: null }, t.alt);
 }
 // 選択肢を出す
 function ask(s, i, icon, title, lines, options, desc) {
@@ -1511,10 +1534,13 @@ function ask(s, i, icon, title, lines, options, desc) {
 function askTile(s, i, tile) {
   const p = s.players[i];
   const pass = s.remain > 0 ? ['通りがかりに選べる。選んだあと残りを進む'] : [];
+  // もう持っているものは、もう一度は買えない（カードでもどって同じマスを通ったとき）
+  const have = { insurance: p.insurance && '保険にはもう入っている', car: p.car && '車はもう持っている', stock: p.stock && '株はもう持っている' }[tile.t];
+  if (have) { ev(s, i, tile.i, tile.n, [have], true); return { changed: true }; }
   switch (tile.t) {
     case 'insurance':
-      return ask(s, i, '🛡', '保険にはいる？', pass.concat(['このあと 財布・事故・入院のマスがある']), [
-        { id: 'yes', label: `はいる（-${R.ins}万）`, sub: `保険料${R.ins}万。事故・入院などの支払いが半分になり、決算日に満期金${R.insBack}万が戻る` },
+      return ask(s, i, '🛡', '保険にはいる？', pass.concat(['病気・ケガ、台風などの住まいの災害、車の事故にそなえる保険']), [
+        { id: 'yes', label: `はいる（-${R.ins}万）`, sub: `保険料${R.ins}万。病気やケガの治療・入院、住まいの災害（台風・水道管の破裂）、車の事故の支払いが半分になり、決算日に満期金${R.insBack}万が戻る。家電の故障や落とし物、車検には効かない` },
         { id: 'no', label: 'はいらない', sub: 'お金は減らないが、もしもの時は全額' },
       ]);
     case 'car':
@@ -1529,8 +1555,8 @@ function askTile(s, i, tile) {
       ]);
     case 'pet':
       if (p.pet) { ev(s, i, '🐶', 'ペット', ['もう家族がいる'], true); return { changed: true }; }
-      return ask(s, i, '🐶', 'ペットを迎える？', pass.concat(['えらんでね']), [
-        { id: 'yes', label: `迎える（-${R.pet}万）`, sub: `飼育用品と初期費用に${R.pet}万。決算日に「いやしボーナス」+${R.petBack}万` },
+      return ask(s, i, '🐶', 'ペットを迎えたい？', pass.concat(['えらんでね']), [
+        { id: 'yes', label: '迎えたい（ルーレットを回す）', sub: `自分でルーレットを回して、1〜${R.petHit}なら迎えられる（飼育用品と初期費用に${R.pet}万、決算日に「いやしボーナス」+${R.petBack}万）。${R.petHit + 1}〜10なら今回は縁がなく、費用もかからない` },
         { id: 'no', label: '今回は見送る', sub: '' },
       ]);
   }
@@ -1540,7 +1566,7 @@ function askTile(s, i, tile) {
 function askKid(s, i, tile) {
   const p = s.players[i];
   return ask(s, i, '👶', '子どもがほしい？', [tile.n, p.kids ? `いまの子ども ${p.kids}人` : 'まだ子どもはいない'], [
-    { id: 'yes', label: 'ほしい（ルーレットを回す）', sub: `自分でルーレットを回して、1〜${R.kidHit}なら生まれる。給料日の子ども手当 +${R.kid}万／人、老後の仕送り +${R.sendoff}万／人。ただし子ども用品・七五三・塾・入学金のマスは高くなる` },
+    { id: 'yes', label: 'ほしい（ルーレットを回す）', sub: `自分でルーレットを回して、1〜${R.kidHit}なら生まれる。給料日の子ども手当 +${perkOf(p) === 'nanny' ? R.kid * 2 : R.kid}万／人、老後の仕送り +${perkOf(p) === 'teach' ? R.sendoff * 2 : R.sendoff}万／人。ただし子ども用品・七五三・塾・入学金のマスは高くなる` },
     { id: 'no', label: '今はいい', sub: '何も起きない' },
   ]);
 }
@@ -1551,36 +1577,38 @@ function resolveTile(s, i) {
     case 'goal': {
       p.goal = ++s.goals;
       const bonus = p.goal === 1 ? R.goal1 : R.goal2;
-      p.money += bonus;
-      ev(s, i, '🏁', 'ゴール！', [`${p.goal}着でゴール　<span class="up">+${bonus}万</span>`]);
+      const gl = [`${p.goal}着でゴール`];
+      money(s, i, bonus, gl);                        // 借金があれば、ここで先に返す
+      ev(s, i, '🏁', 'ゴール！', gl);
       break;
     }
-    case 'money': {
+    case 'money': case 'trouble': {
       const perk = perkOf(p);
       let amount = tile.m;
       if (perk === 'medic' && tile.tag === 'health') { amount = 0; lines.push('医者だから自分で治した ✨'); }
       else if (perk === 'pilot' && tile.tag === 'trip') { amount = 0; lines.push('パイロットの特典でタダ ✨'); }
       else if (perk === 'star' && tile.tag === 'fame') { amount = tile.m * 2; lines.push('人気者だから2倍 ✨'); }
-      else if (perk === 'brave' && tile.m < 0) { amount = Math.round(tile.m / 2); lines.push('消防士だから半額 ✨'); }
-      money(s, i, amount, lines);
-      ev(s, i, tile.i, tile.n, (tile.why ? [tile.why] : []).concat(lines));
-      break;
-    }
-    case 'trouble': {
-      const perk = perkOf(p);
-      let amount = tile.m;
-      if (perk === 'medic' && tile.tag === 'health') { amount = 0; lines.push('医者だから自分で治した ✨'); }
-      else {
-        if (p.insurance) { amount = Math.round(amount / 2); lines.push('保険で半分になった 🛡'); }
-        if (perk === 'brave') { amount = Math.round(amount / 2); lines.push('消防士だから半額 ✨'); }
+      else if (amount < 0) {
+        // 保険は、病気・ケガ／住まいの災害／車の事故のマスだけ半分になる
+        if (p.insurance && tile.ins) { amount = halfCost(amount); lines.push(`保険（${INS_KIND[tile.ins]}）で半分になった 🛡`); }
+        // 消防士は「災難」（財布・事故・入院・故障などの trouble のマス）だけ半額
+        if (perk === 'brave' && tile.t === 'trouble') { amount = halfCost(amount); lines.push('消防士だから半額 ✨'); }
       }
       money(s, i, amount, lines);
-      ev(s, i, tile.i, tile.n, (tile.why ? [tile.why] : []).concat(lines));
+      const ls = (tile.why ? [tile.why] : []).concat(lines);
+      if (tile.rest) {                               // 寝こむ・入院・骨折は、つぎの自分の番が休み
+        p.skip = (p.skip || 0) + 1;
+        ls.push('<b>🛌 つぎの自分の番は一回休み</b>');
+      }
+      ev(s, i, tile.i, tile.n, ls);
       break;
     }
     case 'pay': {
       const perk = perkOf(p);
-      if (perk === 'lawyer') { ev(s, i, tile.i, tile.n, ['弁護士なので はらわずに済んだ ✨']); break; }
+      if (perk === 'lawyer' && tile.tag === 'comp') {      // 弁護士は弁償・賠償だけ、話し合いでタダにできる
+        ev(s, i, tile.i, tile.n, [tile.why, '弁護士なので話し合いで解決。はらわずに済んだ ✨']);
+        break;
+      }
       if (perk === 'chef' && tile.tag === 'treat') {       // 料理人は「おごる」マスだけ逆にもらう
         money(s, i, tile.m, lines);
         money(s, other(i), -tile.m, []);
@@ -1674,9 +1702,10 @@ function resolveTile(s, i) {
       }
       if (p.debt) {                                   // 決算日に残っている借金には、必ず利息1割がつく
         const owe = Math.round(p.debt * 1.1);
+        if (s.dnote) s.dnote[i].n = (s.dnote[i].n || 0) + (owe - p.debt);   // 利息のぶん（ターンのまとめに出す）
         if (p.money >= owe) {
           p.money -= owe;
-          if (s.dnote) s.dnote[i].r += p.debt;
+          if (s.dnote) s.dnote[i].r += owe;
           p.debt = 0;
           ls.push(`借金の返済（利息1割）<span class="down">-${owe}万</span>`);
         } else {
@@ -1790,7 +1819,7 @@ function resolveChoice(s, i, id) {
       return { changed: true, wait: true };
     }
     case 'insurance': {
-      if (id === 'yes') { p.insurance = true; money(s, i, -R.ins, lines); ev(s, i, '🛡', '保険にはいった', ['保険料'].concat(lines, ['事故・入院の支払いが半分に'])); }
+      if (id === 'yes') { p.insurance = true; money(s, i, -R.ins, lines); ev(s, i, '🛡', '保険にはいった', ['保険料'].concat(lines, ['病気・ケガ、住まいの災害、車の事故の支払いが半分に'])); }
       else ev(s, i, '🛡', '保険には入らなかった', [], true);
       break;
     }
@@ -1836,8 +1865,10 @@ function resolveChoice(s, i, id) {
       break;
     }
     case 'pet': {
-      if (id === 'yes') { p.pet = true; money(s, i, -R.pet, lines); ev(s, i, '🐶', 'ペットを迎えた！', ['飼育用品と初期費用'].concat(lines, [`決算日に いやしボーナス +${R.petBack}万`])); }
-      else ev(s, i, '🐶', '今回は見送った', [], true);
+      if (id === 'yes') {                             // 迎えられるかどうかは、自分で回すルーレットで決まる
+        return askSpin(s, i, '🐶', 'ペットを迎えられるかな？', `自分でルーレットを回す。1〜${R.petHit}なら迎えられる（-${R.pet}万）`, { kind: 'pet', icon: '🐶' });
+      }
+      ev(s, i, '🐶', '今回は見送った', [], true);
       break;
     }
     case 'jobchange': {
@@ -1878,6 +1909,16 @@ function jobPending(s, i, icon, uni) {
 
 /* ターンの終わり・精算 */
 function endTurn(s) {
+  // 先にゴールした人は、まだゴールしていない相手がルーレットを回した番の終わりに、ルーレットを回す
+  // （ゴールした直後や、相手が休みの番には回さない。1回の番につき1度だけ）
+  const me = s.current, g = other(me);
+  if (s.turnRec && !s.turnRec.rest && !s.turnRec.bonus && !s.players[me].goal && s.players[g].goal) {
+    s.turnRec.bonus = true;
+    s.remain = 0;
+    askSpin(s, g, '🏁', `${pname(s, g)}のゴール後ルーレット`,
+      `${pname(s, me)}がルーレットを回したので、自分でルーレットを回す。出た目×${R.goalX}万円もらえる`, { kind: 'goalbonus', icon: '🏁' });
+    return;
+  }
   if (s.turnRec) {                       // 1ターンぶんの記録を残す
     if (s.netMark) {
       const now = s.players.map(netOf), me = s.turnRec.p;
@@ -1896,13 +1937,15 @@ function endTurn(s) {
   if (s.players[0].goal && s.players[1].goal) { finish(s); return; }
   const nx = other(s.current);
   if (!s.players[nx].goal) s.current = nx;
-  // 先にゴールした人は、まだゴールしていない人の手番が来るたびにルーレットを回す
-  const g = s.players.findIndex(pl => pl.goal);
-  if (g >= 0 && g !== s.current) {
-    s.turnRec = { no: ++s.turnNo, p: s.current, rolls: [], items: [] };   // 増減はこの手番の記録に入れる
+  // 寝こむ・入院・骨折のあとは、この番がまるごと休み。× をおすと、そのまま次の人の番になる
+  const cp = s.players[s.current];
+  if (cp.skip > 0 && !cp.goal) {
+    cp.skip--;
+    s.turnRec = { no: ++s.turnNo, p: s.current, rolls: [], items: [], rest: true };
     s.netMark = s.players.map(netOf);
-    askSpin(s, g, '🏁', `${pname(s, g)}のゴール後ルーレット`,
-      `${pname(s, s.current)}の番が来たので、自分でルーレットを回す。出た目×${R.goalX}万円もらえる`, { kind: 'goalbonus', icon: '🏁' });
+    ev(s, s.current, '🛌', `${pname(s, s.current)}は一回休み`, ['病気やケガで休んでいるので、この番はルーレットを回せない']);
+    holdThen(s, { k: 'rest' });
+    return;
   }
 }
 function finish(s) {
@@ -2026,21 +2069,28 @@ function tileMain(t) {
   if (t.t === 'pay') return '−' + t.m + '万';
   return '';
 }
+// お金のマスに添える注意（保険・一回休み・車や子どもがいないときの差しかえ）
+function tileNotes(t) {
+  const a = [];
+  if (t.ins) a.push('保険で半額');
+  if (t.rest) a.push('一回休み');
+  if (t.alt) a.push(`${t.needs === 'car' ? '車がない' : '子どもがいない'}ときは「${t.alt.n}」${t.alt.m < 0 ? '−' : '+'}${Math.abs(t.alt.m)}万`);
+  return a;
+}
 // マスに出す説明（タップしなくても分かるように、ここに全部出す）
 function tileShort(t) {
   switch (t.t) {
-    case 'money': return t.why || '';
-    case 'trouble': return (t.why || '') + '。保険に入っていれば半額';
+    case 'money': case 'trouble': return [t.why].concat(tileNotes(t)).filter(Boolean).join('。');
     case 'pay': return t.why || '';
     case 'calm': return '何も起こらなかった';
     case 'start': return `所持金${START_MONEY}万円で出発（後攻は+${SECOND_BONUS}万）`;
-    case 'goal': return `1着+${R.goal1}万円、2着+${R.goal2}万円。先にゴールすると相手の番ごとにルーレット×${R.goalX}万円`;
+    case 'goal': return `1着+${R.goal1}万円、2着+${R.goal2}万円。先にゴールすると、相手の番が終わるたびにルーレット×${R.goalX}万円（相手が休みの番はなし）`;
     case 'card': return '流れるカードをストップで止めて1枚引く';
     case 'salary': return `給料と手当をもらう。ちょうど止まると${R.exact}倍`;
     case 'career': return `進学（-${R.uni}万円・借金してもよい）か、すぐ働く（+${R.workGift}万円）`;
     case 'insurance': return `保険料${R.ins}万円。事故や入院が半額になり、決算日に${R.insBack}万円戻る`;
     case 'marry': return `するか選ぶ。式-${R.wed}万円・ご祝儀+${R.gift}万円・給料日+${R.duo}万円・子どもマスで子どもを望める／しないなら決算日+${R.single}万円`;
-    case 'pet': return `迎えるか選ぶ。${R.pet}万円。決算日にいやしボーナス+${R.petBack}万円`;
+    case 'pet': return `迎えたいならルーレット（1〜${R.petHit}で迎えられて${R.pet}万円）。決算日にいやしボーナス+${R.petBack}万円`;
     case 'jobchange': return `転職して職業を変えるか、今のままで勤続ボーナス+${R.stay}万円か`;
     case 'child': return `結婚していれば、ほしいか選んでルーレット（1〜${R.kidHit}で誕生）。給料日+${R.kid}万円、老後に仕送り+${R.sendoff}万円`;
     case 'car': return `車両代${R.car}万円。決算日に${R.carX}〜${R.carX * 10}万円で売れる`;
@@ -2059,8 +2109,10 @@ function tileShort(t) {
 }
 function tileDesc(t) {
   switch (t.t) {
-    case 'money': return (t.why ? t.why + 'として ' : '') + (t.m > 0 ? `${t.m}万円 もらえる` : `${-t.m}万円 はらう`);
-    case 'trouble': return (t.why ? t.why + 'として ' : '') + `${-t.m}万円 はらう（保険に入っていれば半額の ${Math.round(-t.m / 2)}万円）`;
+    case 'money': case 'trouble':
+      return (t.why ? t.why + 'として ' : '') + (t.m > 0 ? `${t.m}万円 もらえる` : `${-t.m}万円 はらう`)
+        + (t.ins ? `。保険に入っていれば（${INS_KIND[t.ins]}）半額の ${-halfCost(t.m)}万円` : '')
+        + (t.rest ? '。寝こむので、つぎの自分の番は一回休み' : '');
     case 'pay': return (t.why ? t.why + '。' : '') + `相手に ${t.m}万円 わたす`;
     case 'calm': return 'おだやかな一日。何も起こらず、お金も動かない';
     case 'salary': return `職業の給料がもらえる（通りすぎてももらえる）。結婚していれば共働きで+${R.duo}万円、子ども1人につき+${R.kid}万円の手当つき。ちょうど止まると給料が${R.exact}倍！`;
@@ -2071,7 +2123,7 @@ function tileDesc(t) {
     case 'career': return `「進学（-${R.uni}万円）」か「すぐ働く（+${R.workGift}万円）」を選ぶ。進学すると給料の高い職業から選べる（お金が足りなければ奨学金として借りられる）`;
     case 'insurance': return `保険に入るか選ぶ。保険料は${R.ins}万円。事故・入院などの支払いが半額になり、決算日に満期金${R.insBack}万円が戻ってくる`;
     case 'marry': return `結婚するかを選ぶ。するなら式の費用 -${R.wed}万円、ご祝儀 +${R.gift}万円、給料日ごとに「共働き」+${R.duo}万円、このあとの子どもマスで子どもを望める（生まれれば老後に仕送りが届く）。しないなら決算日に「ひとりの時間を満喫」+${R.single}万円（このマスは1回だけ）`;
-    case 'pet': return `ペットを迎えるかを選ぶ。飼育用品と初期費用に${R.pet}万円。決算日に「いやしボーナス」+${R.petBack}万円`;
+    case 'pet': return `ペットを迎えたいかを選ぶ。迎えたいなら自分でルーレットを回し、1〜${R.petHit}で迎えられる（飼育用品と初期費用に${R.pet}万円、決算日に「いやしボーナス」+${R.petBack}万円）。${R.petHit + 1}〜10なら今回は縁がなく、費用もかからない`;
     case 'jobchange': return `転職して職業をえらびなおすか、今のままで勤続ボーナス+${R.stay}万円をもらうかを選ぶ`;
     case 'child': return `結婚していれば、子どもがほしいかを選ぶ。ほしいなら自分でルーレットを回し、1〜${R.kidHit}で子どもが生まれる（${R.kidHit + 1}〜10なら今回は授からない）。生まれると給料日に +${R.kid}万円の手当、老後に「子どもからの仕送り」+${R.sendoff}万円。結婚していなければ姪っ子へのプレゼントで -5万円。通りすぎても起きる`;
     case 'car': return `中古車を買うか選ぶ。車両代は${R.car}万円。決算日に自分でルーレットを回して ${R.carX}〜${R.carX * 10}万円で売る`;
@@ -2084,7 +2136,7 @@ function tileDesc(t) {
     case 'move': return t.s > 0 ? 'いちばん近い先の平穏なマスへそのまま移動する（途中のマスのできごとは起きない）' : 'いちばん近い前の平穏なマスへそのまま移動する（途中のマスのできごとは起きない）';
     case 'final': return `退職金の一部をどうするかを選ぶ。「定期預金にする」なら確実に +${R.safe}万円。「投資にまわす」なら自分でルーレットを回して、1〜3で ${yen(R.inv[0])}円、4〜7で +${R.inv[1]}万円、8〜10で +${R.inv[2]}万円`;
     case 'start': return `ここから出発。所持金 ${START_MONEY}万円（後攻は先攻有利をならすため +${SECOND_BONUS}万円の${START_MONEY + SECOND_BONUS}万円）`;
-    case 'goal': return `ゴール！ 1着なら +${R.goal1}万円、2着なら +${R.goal2}万円。先にゴールした人は、まだゴールしていない人の番が来るたびに自分でルーレットを回し、出た目×${R.goalX}万円をもらえる`;
+    case 'goal': return `ゴール！ 1着なら +${R.goal1}万円、2着なら +${R.goal2}万円。先にゴールした人は、まだゴールしていない相手がルーレットを回した番の終わりに、自分でルーレットを回して出た目×${R.goalX}万円をもらえる（相手が休みの番はなし）`;
   }
   return '';
 }
@@ -2103,7 +2155,7 @@ const tiles = BOARD.map((t, i) => {
   b.addEventListener('click', () => {
     $('#tdIcon').textContent = t.i;
     $('#tdName').textContent = t.n;
-    $('#tdDesc').textContent = tileDesc(t) + (t.alt ? `　※${t.needs === 'car' ? '車' : '子ども'}がいないときは「${t.alt.n}（${-t.alt.m}万円）」になります` : '')
+    $('#tdDesc').textContent = tileDesc(t) + (t.alt ? `　※${t.needs === 'car' ? '車がない' : '子どもがいない'}ときは「${t.alt.n}（${-t.alt.m}万円${t.needs === 'car' ? '、保険は効かない' : ''}）」になります` : '')
       + (PICK_TYPES.includes(t.t) ? '　※通りすぎるときにも止まって選べます（選んだあと残りを進む）' : '');
     $('#tdStop').hidden = !t.stop;
     closeModals();
@@ -2267,16 +2319,18 @@ function futureOf(p) {
     if (!p.married) items.push({ n: 'ひとりの時間', v: R.single });
     if (p.insurance) items.push({ n: '保険の満期金', v: R.insBack });
     if (p.pet) items.push({ n: 'ペットのいやし', v: R.petBack });
-    if (p.house) {
-      const h = p.house;
-      if (perkOf(p) === 'archi') items.push({ n: `${h.n}の売却（建築士）`, v: h.p * R.archiX });
-      else items.push({ n: `${h.n}の売却`, lo: Math.round(h.p * h.lo), hi: Math.round(h.p * h.hi) });
-    }
-    if (p.car) items.push({ n: '車の売却', lo: R.carX, hi: R.carX * 10 });
   }
+  // 家と車は、決算日の × のあとにルーレットで売るまで残っているので、決算日のあとも出す
+  if (p.house) {
+    const h = p.house;
+    if (perkOf(p) === 'archi') items.push({ n: `${h.n}の売却（建築士）`, v: h.p * R.archiX });
+    else items.push({ n: `${h.n}の売却`, lo: Math.round(h.p * h.lo), hi: Math.round(h.p * h.hi) });
+  }
+  if (p.car) items.push({ n: '車の売却', lo: R.carX, hi: R.carX * 10 });
   if (p.stock) items.push({ n: '株の売却', lo: R.stockX, hi: R.stockX * 10 });
-  if (!p.goal) items.push({ n: 'ゴール', lo: R.goal2, hi: R.goal1 });
-  else if (state && state.players.some(o => !o.goal)) items.push({ n: '相手の番ごとのルーレット', note: `（出た目×${R.goalX}万）` });
+  const oppGoaled = state && state.players.some(o => o !== p && o.goal);
+  if (!p.goal) items.push(oppGoaled ? { n: 'ゴール（2着）', v: R.goal2 } : { n: 'ゴール', lo: R.goal2, hi: R.goal1 });
+  else if (state && state.players.some(o => !o.goal)) items.push({ n: '相手の番が終わるたびのルーレット', note: `（出た目×${R.goalX}万。相手が休みの番はなし）` });
   if (p.debt) items.push(p.settled ? { n: '借金の返済（利息こみ）', v: -p.debt } : { n: '借金の返済（決算日に利息1割）', v: -Math.round(p.debt * 1.1) });
   let lo = 0, hi = 0;
   items.forEach(x => { if (x.note) return; lo += x.v != null ? x.v : x.lo; hi += x.v != null ? x.v : x.hi; });
@@ -2313,6 +2367,7 @@ function renderTop() {
     if (p.pet) bg.push('<span class="bg">🐶 ペット</span>');
     if (p.stock) bg.push('<span class="bg">📊 株</span>');
     if (p.debt) bg.push(`<span class="bg debt">💳 借金 ${p.debt}万</span>`);
+    if (p.skip) bg.push(`<span class="bg debt">🛌 つぎは休み${p.skip > 1 ? `（${p.skip}回）` : ''}</span>`);
     if (p.goal) bg.push(`<span class="bg">🏁 ${p.goal}着</span>`);
     c.querySelector('.pc-badges').innerHTML = bg.join('');
     // このあと入る予定。内訳は省略せずに全部出す
@@ -2578,7 +2633,7 @@ function renderEvPop() {
   const e = s.event;
   if (pop.dataset.key !== String(h.id) || pop.hidden) {
     pop.dataset.key = String(h.id);
-    $('#cpHead').textContent = h.next.k === 'walk' ? '通りがかり' : e.cardIdx != null ? 'ハプニングカード' : 'できごと';
+    $('#cpHead').textContent = h.next.k === 'walk' ? '通りがかり' : h.next.k === 'rest' ? '一回休み' : e.cardIdx != null ? 'ハプニングカード' : 'できごと';
     $('#cpIcon').textContent = e.icon;
     $('#cpTitle').textContent = e.title;
     $('#cpLines').innerHTML = e.lines.join('<br>');
@@ -2622,6 +2677,7 @@ function turnHTML(r) {
   const debtLine = x => {
     const a = [];
     if (x.b) a.push(`足りない ${x.b}万を借りた`);
+    if (x.n) a.push(`決算日の利息 ${x.n}万がついた`);
     if (x.r) a.push(`借金 ${x.r}万を返した`);
     if (x.ob) a.push(`${on}が ${x.ob}万を借りた`);
     if (x.or) a.push(`${on}が借金 ${x.or}万を返した`);
@@ -2632,11 +2688,12 @@ function turnHTML(r) {
         + (x.o ? `<em class="${x.o > 0 ? 'up' : 'down'}">（${on} ${signed(x.o)}）</em>` : '')
         + `</span><b class="${x.d > 0 ? 'up' : x.d < 0 ? 'down' : ''}">${x.d ? signed(x.d) : '±0'}</b></div>` + debtLine(x)).join('')
     : '<div class="hi-row"><span>なにも起きなかった</span><b>±0</b></div>';
-  const borrowed = r.items.reduce((a, x) => a + (x.b || 0), 0), repaid = r.items.reduce((a, x) => a + (x.r || 0), 0);
-  const debtSum = (borrowed || repaid || r.debt)
-    ? `<div class="hi-sum">💳 借りた ${borrowed}万　返した ${repaid}万　借金のこり <b class="${r.debt ? 'down' : ''}">${r.debt || 0}万</b></div>` : '';
+  const sumOf = k => r.items.reduce((a, x) => a + (x[k] || 0), 0);
+  const borrowed = sumOf('b'), repaid = sumOf('r'), interest = sumOf('n');
+  const debtSum = (borrowed || repaid || interest || r.debt)
+    ? `<div class="hi-sum">💳 借りた ${borrowed}万${interest ? `　利息 ${interest}万` : ''}　返した ${repaid}万　借金のこり <b class="${r.debt ? 'down' : ''}">${r.debt || 0}万</b></div>` : '';
   return `<div class="hist-turn c${r.p}">
-      <div class="hi-head"><b>${r.no}ターン目</b><span>${esc(pname(state, r.p))}</span><span class="hi-roll">🎡 出目 ${(r.rolls || [r.roll]).join(' → ')}</span></div>
+      <div class="hi-head"><b>${r.no}ターン目</b><span>${esc(pname(state, r.p))}</span><span class="hi-roll">${r.rest ? '🛌 一回休み' : `🎡 出目 ${(r.rolls || [r.roll]).join(' → ')}`}</span></div>
       ${rows}
       <div class="hi-sum">もらった <b class="up">+${gain}万</b>　はらった <b class="down">−${Math.abs(loss)}万</b>　このターンの収支 <b class="${net > 0 ? 'up' : net < 0 ? 'down' : ''}">${net ? signed(net) : '±0万'}</b></div>
       ${debtSum}
@@ -3227,16 +3284,17 @@ $('#rulesTable').innerHTML = [
   ['給料日', `全部で${BOARD.filter(t => t.t === 'salary').length}回。職業の給料がもらえます（結婚していれば共働き+${R.duo}万円、子ども1人につき+${R.kid}万円の手当も）。<b>通りすぎてももらえ、ちょうど止まると${R.exact}倍</b>`],
   ['🎴 カード', `流れてくるカードを「ストップ」で止めて1枚引きます。止まったカードがそのまま効きます。全${CARDS.length}種類：${CARDS.map(c => `${esc(c.n)}（${esc(cardAmt(c))}）`).join('／')}`],
   ['🍵 平穏なマス', '何も起こらないマスです。「進む」「もどる」のマスとカードは、いちばん近い平穏なマスまで、途中のマスを通らずに移動します'],
-  ['🌉 橋', '最初にわたった人が持ち主。あとから通った人は通行料10万円をはらいます'],
-  ['🎤 対決', `ふたりとも自分でルーレットを回し、大きい目を出したほうが相手から20万円もらいます`],
+  ['🌉 橋', `最初にわたった人が持ち主。あとから通った人は通行料${BOARD.find(t => t.t === 'bridge').m}万円をはらいます`],
+  ['🎤 対決', `ふたりとも自分でルーレットを回し、大きい目を出したほうが相手から${BOARD.find(t => t.t === 'vs').m}万円もらいます`],
   ['💳 借金', 'お金が足りないときは、足りないぶんだけ銀行から借ります（所持金6万円で8万円はらうと、借金2万円・所持金0円）。お金が入ると先に借金を返します（そのあと10万円入れば、2万円を返して所持金8万円）。決算日に残っていれば利息1割をつけて返します。借りた・返したは、ターンのまとめにも出ます'],
   ['🎊 決算日', `ゴール前の大きな精算。退職金（給料の${R.retire}倍）・子どもからの仕送り（1人${R.sendoff}万円）・保険の満期金・ペット・独身ボーナス（${R.single}万円）を受け取り、持ち家と車をルーレットで売り、借金を返します`],
-  ['保険', `保険料${R.ins}万円。事故や入院の支払いが半分になり、決算日に満期金${R.insBack}万円が戻ります`],
+  ['保険', `保険料${R.ins}万円。病気やケガの治療・入院、住まいの災害（台風・水道管の破裂）、車の事故の支払いが半分になり、決算日に満期金${R.insBack}万円が戻ります。家電の故障・落とし物・車検・自転車の修理には効きません`],
+  ['🛌 一回休み', '寝こむ・入院・骨折のマスでは、お金をはらったうえで、つぎの自分の番が休みになります（医者はお金がタダ、休みはあり）'],
   ['マイホーム・車・株', '買うとお金が減りますが、あとでルーレットを回して売ると値段が変わって返ってきます'],
   ['職業の特典', '職業ごとに特典があります（例：医者は入院がタダ、大工は家が2割引）。給料の高さと特典を見くらべて選びましょう'],
   ['結婚', `するかしないかを選べます。すると給料日ごとに共働き+${R.duo}万円、しないと決算日に +${R.single}万円`],
   ['👶 子ども', `結婚していると、子どもマスで子どもがほしいかを選べます。ほしいならルーレットを回し、1〜${R.kidHit}で生まれます。通りすぎても起きます`],
-  ['🏁 ゴール', `先にゴールで +${R.goal1}万円（あとからは +${R.goal2}万円）。<b>先にゴールした人は、相手の番が来るたびに自分でルーレットを回し、出た目×${R.goalX}万円をもらえます</b>。このあと入る予定のお金は、名前の下の黄色い欄にいつも出ています`],
+  ['🏁 ゴール', `先にゴールで +${R.goal1}万円（あとからは +${R.goal2}万円）。<b>先にゴールした人は、相手がルーレットを回した番の終わりに、自分でルーレットを回して出た目×${R.goalX}万円をもらえます</b>（相手が休みの番はなし）。このあと入る予定のお金は、名前の下の黄色い欄にいつも出ています`],
   ['ライフステージ', `盤面は${STAGES.map(st => '「' + st.n + '」').join('')}の${STAGES.length}つに分かれています（全${BOARD_LEN}マス）`],
 ].map(([h, d]) => `<tr><th>${h}</th><td>${d}</td></tr>`).join('');
 refreshLobby();
