@@ -1119,8 +1119,10 @@ function animMs(anim) {
   if (!anim) return 0;
   if (anim.reel != null) return REEL_MS + 150;
   const steps = Math.abs(anim.to - anim.from);
-  return (anim.wheel ? WHEEL_MS : 300) + steps * STEP_MS + 260;
+  return (anim.wheel ? WHEEL_MS : 300) + steps * STEP_MS + walkTail(steps);
 }
+// 歩き終わりまでの余白。歩いたときは最後の1マスの移動がちょうど終わるまで待つ（着く前に次の処理を始めない）
+const walkTail = steps => steps ? STEP_MS + 40 : 260;
 
 /* ================= 行動（ホストが処理） ================= */
 // できごとが起きたら、手番の人が × を押すまで次へ進まない
@@ -2281,10 +2283,17 @@ function renderFamily() {
     $('#fam' + i).innerHTML = h;
   });
 }
+// コマを置く位置。歩き終わってから着地処理（ホスト側で位置を書き換える）までのすき間は、移動先に置いておく
+// （これがないと、歩き終わった瞬間に一瞬だけ元のマスへ戻ってカクつく）
+function shownPos() {
+  if (animating) return tokenPos;
+  const a = state.moving && state.anim;
+  return state.players.map((pl, i) => (a && a.p === i ? a.to : pl.pos));
+}
 function placeWalkers(instant) {
   if (!centers.length || !state) return;
   renderFamily();
-  const pos = animating ? tokenPos : [state.players[0].pos, state.players[1].pos];
+  const pos = shownPos();
   const dy = tiles[0].getBoundingClientRect().height * 0.46;
   walkers.forEach((wk, i) => {
     const n = Math.max(0, Math.min(pos[i] | 0, LAST));
@@ -2422,7 +2431,7 @@ function renderBonusBody() {
 function renderBoard() {
   const s = state;
   if (!centers.length || Math.abs(boardEl.clientWidth - boardW) > 1) { layoutBoard(); }
-  const pos = animating ? tokenPos : [s.players[0].pos, s.players[1].pos];
+  const pos = shownPos();
   tiles.forEach((el, i) => {
     el.classList.toggle('here', s.phase === 'playing' && !animating && pos[s.current] === i);
   });
@@ -2572,18 +2581,21 @@ function playAnim(a) {
   if (steps) later(() => wk.classList.add('walking'), t - 120);
   for (let k = 1; k <= steps; k++) {
     later(() => {
+      // 最後の1マスは減速しながら止まる（1マスだけのときは、加速して減速する）
+      if (k === steps) wk.style.transition = `transform ${STEP_MS / 1000}s ${steps === 1 ? 'ease-in-out' : 'cubic-bezier(.3,.6,.45,1)'}`;
       tokenPos[a.p] = a.from + dir * k;
       sfx.step();
       placeWalkers();
       keepInView(tokenPos[a.p]);
     }, t + k * STEP_MS);
   }
-  later(() => {
+  later(() => {                          // 目的のマスに着いてから、歩きを止めて次の処理を見せる
     wk.classList.remove('walking');
+    wk.style.transition = '';
     animating = false;
-    tokenPos = [state.players[0].pos, state.players[1].pos];
+    tokenPos = shownPos();
     render();
-  }, t + steps * STEP_MS + 260);
+  }, t + steps * STEP_MS + walkTail(steps));
 }
 function spinWheel(v) {
   $('#wheelVal').textContent = '';
@@ -2598,6 +2610,7 @@ function spinWheel(v) {
 /* ---------- ハプニングカードのリール ---------- */
 const REEL_W = 112;                       // カード1枚ぶんの幅（カード104＋すきま8）
 const REEL_STOP_MS = 3400;                // ストップを押してから止まりきるまで
+const REEL_SPEED = 9 / 16;                // 流れる速さ（ピクセル／ミリ秒。毎秒約560ピクセル）
 let reelTimer = 0, reelPos = 0, reelItems = [], reelAnim = false;
 function cardAmtClass(c) {
   if (c.pay) return 'down';
@@ -2617,11 +2630,11 @@ function startReel() {
   strip.style.transition = 'none';
   strip.style.transform = 'translateX(0)';
   clearInterval(reelTimer);
-  const speed = 9;
+  // 位置は「経過時間 × 速さ」で決める。タイマーの間隔がぶれても、流れる速さは一定になる
+  const t0 = performance.now();
   reelTimer = setInterval(() => {                 // どんどん流れる
-    reelPos -= speed;
-    if (-reelPos > REEL_W * 20) reelPos += REEL_W * 20;   // 端まで来たら先頭にもどす
-    strip.style.transform = `translateX(${reelPos}px)`;
+    reelPos = -((REEL_SPEED * (performance.now() - t0)) % (REEL_W * 20));   // 端まで来たら先頭にもどす
+    strip.style.transform = `translateX(${reelPos.toFixed(1)}px)`;
   }, 16);
 }
 // 決まったカードを数枚先に置いて、目印の真下でゆっくり止める
@@ -2641,7 +2654,10 @@ function stopReel(cardIdx) {
   const el = strip.children[targetIndex];
   const target = half - (el.offsetLeft + el.offsetWidth / 2);     // カードの中心を枠の中心（目印）にそろえる
   void strip.offsetWidth;
-  strip.style.transition = `transform ${REEL_STOP_MS / 1000}s cubic-bezier(.1,.62,.16,1)`;
+  // 止まり方：出だしの速さを、それまで流れていた速さにそろえてから減速する（押した瞬間に加速しない）
+  const dist = Math.max(1, reelPos - target), x1 = 0.3;
+  const y1 = Math.min(1, x1 * REEL_SPEED * REEL_STOP_MS / dist);
+  strip.style.transition = `transform ${REEL_STOP_MS / 1000}s cubic-bezier(${x1},${y1.toFixed(3)},.25,1)`;
   strip.style.transform = `translateX(${target}px)`;
   reelPos = target;
   for (let k = 0, t = 60; t < REEL_STOP_MS - 150; k++, t += 45 + k * 13) later(() => sfx.tick(), t);
