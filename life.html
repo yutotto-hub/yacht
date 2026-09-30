@@ -2032,6 +2032,11 @@ let state = null;
 let screen = 'lobby';
 let animating = false, shownAnimId = 0, animTimers = [];
 let tokenPos = [0, 0];
+// ルーレットや歩く演出の間は、演出が始まる前の表示のままにする（止まる前に結果が見えないように）
+// lastView は演出中でないときに描いた中身の写し。演出が始まったら viewSnap に固定し、終わったら外す
+let lastView = null, viewSnap = null;
+const viewPlayers = () => (viewSnap ? viewSnap.players : state.players);
+const viewLog = () => (viewSnap ? viewSnap.log : state.log);
 let wheelDeg = 0, lastTurnKey = '', resultShownFor = -1;
 let busy = false, busyT = 0, wasLost = false, lastStamp = 0, landTimer = 0;
 const net = {
@@ -2272,7 +2277,7 @@ const personHTML = cls => `<div class="person ${cls}">`
 let famKey = ['', ''];
 function renderFamily() {
   [0, 1].forEach(i => {
-    const p = state.players[i];
+    const p = viewPlayers()[i];
     const key = (p.married ? 'm' : '') + p.kids + (p.pet ? 'p' : '');
     if (key === famKey[i]) return;
     famKey[i] = key;
@@ -2348,9 +2353,11 @@ function render() {
     resultShownFor = s.gameNo;
     setTimeout(showResult, 700);
   }
+  // 1台モードは状態をそのまま書き換えるので、コピーで持っておく
+  if (!animating) lastView = { gameNo: s.gameNo, players: JSON.parse(JSON.stringify(s.players)), log: s.log.slice(-6) };
 }
 // このあと入る予定のお金（決算日・売却・ゴール・借金）。項目ごとに金額かその幅を出す
-function futureOf(p) {
+function futureOf(p, ps = state && state.players) {
   const items = [];
   if (!p.settled) {
     items.push({ n: '退職金', v: retireOf(p) });
@@ -2367,9 +2374,9 @@ function futureOf(p) {
   }
   if (p.car) items.push({ n: '車の売却', lo: R.carX, hi: R.carX * 10 });
   if (p.stock) items.push({ n: '株の売却', lo: R.stockX, hi: R.stockX * 10 });
-  const oppGoaled = state && state.players.some(o => o !== p && o.goal);
+  const oppGoaled = ps && ps.some(o => o !== p && o.goal);
   if (!p.goal) items.push(oppGoaled ? { n: 'ゴール（2着）', v: R.goal2 } : { n: 'ゴール', lo: R.goal2, hi: R.goal1 });
-  else if (state && state.players.some(o => !o.goal)) items.push({ n: '相手の番が終わるたびのルーレット', note: `（出た目×${R.goalX}万。相手が休みの番はなし）` });
+  else if (ps && ps.some(o => !o.goal)) items.push({ n: '相手の番が終わるたびのルーレット', note: `（出た目×${R.goalX}万。相手が休みの番はなし）` });
   if (p.debt) items.push(p.settled ? { n: '借金の返済（利息こみ）', v: -p.debt } : { n: '借金の返済（決算日に利息1割）', v: -Math.round(p.debt * 1.1) });
   let lo = 0, hi = 0;
   items.forEach(x => { if (x.note) return; lo += x.v != null ? x.v : x.lo; hi += x.v != null ? x.v : x.hi; });
@@ -2379,9 +2386,9 @@ const signed = v => (v < 0 ? '−' : '+') + Math.abs(v) + '万';
 const fmtItem = x => x.note ? x.note : x.v != null ? signed(x.v) : `+${x.lo}〜${x.hi}万`;
 const fmtRange = f => f.lo === f.hi ? signed(f.lo) : `${signed(f.lo)}〜${f.hi}万`;
 function renderTop() {
-  const s = state, me = viewer();
+  const s = state, me = viewer(), ps = viewPlayers();
   [0, 1].forEach(i => {
-    const c = $('#pcard' + i), p = s.players[i];
+    const c = $('#pcard' + i), p = ps[i];
     c.querySelector('.pc-name').textContent = p.name || '…';
     c.querySelector('.pc-you').textContent = net.mode !== 'local' && i === me ? 'あなた' : '';
     const mEl = c.querySelector('.pc-money');
@@ -2410,7 +2417,7 @@ function renderTop() {
     if (p.goal) bg.push(`<span class="bg">🏁 ${p.goal}着</span>`);
     c.querySelector('.pc-badges').innerHTML = bg.join('');
     // このあと入る予定。内訳は省略せずに全部出す
-    const f = futureOf(p);
+    const f = futureOf(p, ps);
     c.querySelector('.pc-bonus').innerHTML = f.items.length
       ? `🎁 このあと <b>${fmtRange(f)}</b><small>${f.items.map(x => `${esc(x.n)}${fmtItem(x)}`).join('・')}</small>`
       : '🎁 このあと入る予定はなし';
@@ -2421,7 +2428,7 @@ function renderTop() {
 function renderBonusBody() {
   if (!state) { $('#bonusBody').innerHTML = ''; return; }
   $('#bonusBody').innerHTML = [0, 1].map(i => {
-    const p = state.players[i], f = futureOf(p);
+    const ps = viewPlayers(), p = ps[i], f = futureOf(p, ps);
     const rows = f.items.map(x => `<tr><th>${esc(x.n)}</th><td>${fmtItem(x)}</td></tr>`).join('')
       || '<tr><th>予定はなし</th><td></td></tr>';
     return `<div class="bn-p c${i}"><div class="bn-name">${esc(p.name || '')}</div>`
@@ -2465,7 +2472,7 @@ function keepInView(i, force) {
 }
 function renderLog() {
   const s = state;
-  $('#log').innerHTML = s.log.slice(-6).map(l =>
+  $('#log').innerHTML = viewLog().slice(-6).map(l =>
     `<div><b>${esc(s.players[l.p].name || '')}</b>：${l.text}</div>`).join('') || '<div>ここに できごとが出ます</div>';
   $('#log').scrollTop = $('#log').scrollHeight;
 }
@@ -2554,11 +2561,13 @@ function clearAnim() {
   animTimers = [];
   animating = false;
   reelAnim = false;
+  viewSnap = null;
 }
 const later = (fn, ms) => animTimers.push(setTimeout(fn, ms));
 function playAnim(a) {
   clearAnim();
   animating = true;
+  viewSnap = lastView && lastView.gameNo === state.gameNo ? lastView : null;   // 止まるまでは前の表示のまま
   tokenPos = [state.players[0].pos, state.players[1].pos];
   tokenPos[a.p] = a.from;
   if (a.reel != null) {                  // ハプニングカードのリールを、決まったカードのところで止める
@@ -2567,6 +2576,7 @@ function playAnim(a) {
     later(() => {
       reelAnim = false;
       animating = false;
+      viewSnap = null;
       $('#reelModal').classList.remove('open');
       render();
     }, REEL_MS);
@@ -2593,6 +2603,7 @@ function playAnim(a) {
     wk.classList.remove('walking');
     wk.style.transition = '';
     animating = false;
+    viewSnap = null;
     tokenPos = shownPos();
     render();
   }, t + steps * STEP_MS + walkTail(steps));
@@ -2987,7 +2998,7 @@ function resetUi() {
   $('#sumModal').classList.remove('open');
   $('#evPop').hidden = true;
   busy = false; wasLost = false;
-  lastNet = null; sumKey = ''; evPopDismissed = 0;
+  lastNet = null; sumKey = ''; evPopDismissed = 0; lastView = null;
 }
 function leave() {
   net.gen++;
