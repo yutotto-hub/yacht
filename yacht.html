@@ -327,6 +327,22 @@ kbd{display:inline-block;padding:0 5px;border:1px solid var(--line);border-botto
   20%{opacity:1;transform:translate(-50%,0) scale(1.1)}
   100%{opacity:0;transform:translate(-50%,-120px) scale(1)}
 }
+.float-chat{
+  position:fixed; top:42%; z-index:74; pointer-events:none;
+  width:max-content; max-width:min(260px, 56vw); padding:8px 14px;
+  background:#fff; border:3px solid var(--p0); border-radius:16px; box-shadow:0 6px 18px rgba(0,0,0,.22);
+  color:var(--ink); font-size:20px; font-weight:800; line-height:1.35; text-align:center; word-break:break-word;
+  animation:floatUpText 3s ease-out forwards;
+}
+.float-chat.c0{left:30%}
+.float-chat.c1{left:70%;border-color:var(--p1)}
+@keyframes floatUpText{
+  0%{opacity:0;transform:translate(-50%,30px) scale(.5)}
+  10%{opacity:1;transform:translate(-50%,0) scale(1.08)}
+  18%{transform:translate(-50%,0) scale(1)}
+  75%{opacity:1;transform:translate(-50%,-40px) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-120px) scale(1)}
+}
 
 /* ---------- チャット ---------- */
 .stamps .chat-btn{position:relative;background:rgba(255,255,255,.24)}
@@ -335,16 +351,6 @@ kbd{display:inline-block;padding:0 5px;border:1px solid var(--line);border-botto
   border-radius:999px; background:var(--p0); color:#fff; font-size:10.5px; font-weight:800; line-height:17px;
   box-shadow:0 0 0 2px #fff;
 }
-.bubble.text{
-  width:max-content; max-width:min(200px, 46vw); padding:6px 10px; text-align:left;
-  font-size:13px; font-weight:700; line-height:1.4; color:var(--ink);
-}
-.bubble .btxt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
-.c0 > .bubble.text{left:0;transform:scale(0);transform-origin:18px 0}
-.c1 > .bubble.text{left:auto;right:0;transform:scale(0);transform-origin:calc(100% - 18px) 0}
-.c0 > .bubble.text.show,.c1 > .bubble.text.show{transform:scale(1)}
-.c0 > .bubble.text::before{left:18px}
-.c1 > .bubble.text::before{left:auto;right:12px;margin-left:0}
 #chatModal{z-index:90}
 .chat-card{gap:8px;height:min(540px, calc(100dvh - 32px))}
 .chat-log{
@@ -980,31 +986,29 @@ function toast(msg) {
   clearTimeout(t._t);
   t._t = setTimeout(() => t.classList.remove('show'), 2300);
 }
-function showBubble(p, content, isText) {
+function showBubble(p, content) {
   const b = $('#chip' + p).querySelector('.bubble');
-  b.classList.toggle('text', !!isText);
-  b.textContent = '';
-  if (isText) {
-    const t = document.createElement('span');
-    t.className = 'btxt';
-    t.textContent = content;
-    b.appendChild(t);
-  } else {
-    b.textContent = content;
-  }
+  b.textContent = content;
   b.classList.remove('show');
   void b.offsetWidth;
   b.classList.add('show');
   clearTimeout(b._t);
-  b._t = setTimeout(() => b.classList.remove('show'), isText ? 3500 : 2400);
+  b._t = setTimeout(() => b.classList.remove('show'), 2400);
 }
 function showStamp(p, s) {
-  showBubble(p, s, false);
+  showBubble(p, s);
   const f = document.createElement('div');
   f.className = 'float-stamp c' + p;
   f.textContent = s;
   document.body.appendChild(f);
   setTimeout(() => f.remove(), 1600);
+}
+function showChatFloat(p, text) {
+  const f = document.createElement('div');
+  f.className = 'float-chat c' + p;
+  f.textContent = text;
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 3100);
 }
 /* ---------- チャット ---------- */
 function addChat(e) {
@@ -1014,7 +1018,7 @@ function addChat(e) {
   chatLog.push({ p: e.p, name: state.players[e.p].name, text, at: +e.at || Date.now() });
   if (chatLog.length > CHAT_LOG_MAX) chatLog.splice(0, chatLog.length - CHAT_LOG_MAX);
   renderChat();
-  showBubble(e.p, text, true);
+  showChatFloat(e.p, text);
   if (e.p !== net.me) {
     if (!chatOpen()) { chatUnread++; renderChatBadge(); }
     sfx.chat();
@@ -1060,6 +1064,7 @@ function sendChat() {
   lastChat = Date.now();
   $('#chatInput').value = '';
   dispatch({ type: 'chat', text });
+  closeChat();
 }
 function resetChat() {
   chatLog = [];
