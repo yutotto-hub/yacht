@@ -104,21 +104,20 @@ h1{font-size:44px;margin:0;letter-spacing:.12em;font-weight:800}
   background:rgba(239,230,210,.93); backdrop-filter:blur(8px); border-bottom:1px solid var(--line);
 }
 .chip{
-  position:relative; min-width:0; display:flex; align-items:center; gap:8px;
-  padding:6px 10px; background:#fff; border:2px solid var(--line); border-radius:14px;
+  position:relative; min-width:0; display:flex; flex-direction:column; gap:1px;
+  padding:5px 10px; background:#fff; border:2px solid var(--line); border-radius:14px;
   transition:border-color .2s, box-shadow .2s;
 }
-.chip.c1{flex-direction:row-reverse;text-align:right}
+.chip.c1{text-align:right}
 .chip .dot{width:10px;height:10px;border-radius:50%;flex:none}
 .chip.c0 .dot{background:var(--p0)}
 .chip.c1 .dot{background:var(--p1)}
-.chip-info{min-width:0;flex:1}
-.chip-name{display:flex;align-items:baseline;gap:4px;min-width:0;font-weight:800;font-size:14px}
-.chip.c1 .chip-name{flex-direction:row-reverse}
+.chip-name{display:flex;align-items:center;gap:6px;min-width:0;font-weight:800;font-size:14px;line-height:1.3}
 .chip-name .nm{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chip-name .you-tag{flex:none;font-size:9px;font-weight:700;color:var(--muted)}
-.chip-sub{font-size:10px;color:var(--muted);line-height:1.25;min-height:1.25em}
-.chip-score{font-weight:800;font-size:22px;flex:none}
+.chip-row{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;min-width:0}
+.chip.c1 .chip-name,.chip.c1 .chip-row{flex-direction:row-reverse}
+.chip-sub{min-width:0;font-size:10px;color:var(--muted);line-height:1.25;min-height:1.25em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip-score{font-weight:800;font-size:20px;line-height:1;flex:none}
 .chip.c0 .chip-score{color:var(--p0)}
 .chip.c1 .chip-score{color:var(--p1)}
 .chip.cur.c0{border-color:var(--p0);box-shadow:0 0 0 3px var(--p0s)}
@@ -251,8 +250,8 @@ h1{font-size:44px;margin:0;letter-spacing:.12em;font-weight:800}
 @media (max-width:370px){
   :root{--ds:48px}
   .dice-row{gap:8px}
-  .chip{padding:5px 7px;gap:6px}
-  .chip-score{font-size:19px}
+  .chip{padding:5px 7px}
+  .chip-score{font-size:18px}
 }
 
 /* ---------- トースト・モーダル・演出 ---------- */
@@ -328,6 +327,42 @@ kbd{display:inline-block;padding:0 5px;border:1px solid var(--line);border-botto
   20%{opacity:1;transform:translate(-50%,0) scale(1.1)}
   100%{opacity:0;transform:translate(-50%,-120px) scale(1)}
 }
+
+/* ---------- チャット ---------- */
+.stamps .chat-btn{position:relative;background:rgba(255,255,255,.24)}
+.chat-btn .badge{
+  position:absolute; top:-6px; right:-5px; min-width:17px; height:17px; padding:0 4px;
+  border-radius:999px; background:var(--p0); color:#fff; font-size:10.5px; font-weight:800; line-height:17px;
+  box-shadow:0 0 0 2px #fff;
+}
+.bubble.text{
+  width:max-content; max-width:min(200px, 46vw); padding:6px 10px; text-align:left;
+  font-size:13px; font-weight:700; line-height:1.4; color:var(--ink);
+}
+.bubble .btxt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.c0 > .bubble.text{left:0;transform:scale(0);transform-origin:18px 0}
+.c1 > .bubble.text{left:auto;right:0;transform:scale(0);transform-origin:calc(100% - 18px) 0}
+.c0 > .bubble.text.show,.c1 > .bubble.text.show{transform:scale(1)}
+.c0 > .bubble.text::before{left:18px}
+.c1 > .bubble.text::before{left:auto;right:12px;margin-left:0}
+#chatModal{z-index:90}
+.chat-card{gap:8px;height:min(540px, calc(100dvh - 32px))}
+.chat-log{
+  flex:1; min-height:120px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;
+  padding:10px; background:var(--bg); border-radius:14px;
+}
+.chat-empty{margin:auto;color:var(--muted);font-size:13px;text-align:center}
+.cmsg{max-width:82%;align-self:flex-start;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.cmsg.me{align-self:flex-end;align-items:flex-end}
+.cmsg-meta{padding:0 4px;font-size:10.5px;font-weight:700;color:var(--muted)}
+.cmsg-text{padding:7px 11px;border-radius:14px 14px 14px 4px;font-size:14px;line-height:1.45;word-break:break-word;background:#fff}
+.cmsg.me .cmsg-text{border-radius:14px 14px 4px 14px}
+.cmsg.c0 .cmsg-text{background:var(--p0s);box-shadow:inset 0 0 0 2px rgba(224,89,61,.22)}
+.cmsg.c1 .cmsg-text{background:var(--p1s);box-shadow:inset 0 0 0 2px rgba(45,127,182,.22)}
+.chat-note{margin:0;font-size:12px;font-weight:700;color:var(--p0);text-align:center}
+.chat-form{display:flex;gap:8px}
+.chat-form input{flex:1;min-width:0;padding:11px 12px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:16px}
+.chat-form .btn{padding:10px 16px;font-size:15px}
 </style>
 </head>
 <body>
@@ -371,16 +406,14 @@ kbd{display:inline-block;padding:0 5px;border:1px solid var(--line);border-botto
 <section id="game" class="screen" hidden>
   <header class="topbar">
     <div class="chip c0" id="chip0">
-      <span class="dot"></span>
-      <div class="chip-info"><div class="chip-name"><span class="nm"></span><span class="you-tag"></span></div><div class="chip-sub"></div></div>
-      <div class="chip-score">0</div>
+      <div class="chip-name"><span class="dot"></span><span class="nm"></span></div>
+      <div class="chip-row"><div class="chip-sub"></div><div class="chip-score">0</div></div>
       <div class="bubble"></div>
     </div>
     <div class="round"><small>ラウンド</small><b id="roundInfo">1/12</b></div>
     <div class="chip c1" id="chip1">
-      <span class="dot"></span>
-      <div class="chip-info"><div class="chip-name"><span class="nm"></span><span class="you-tag"></span></div><div class="chip-sub"></div></div>
-      <div class="chip-score">0</div>
+      <div class="chip-name"><span class="dot"></span><span class="nm"></span></div>
+      <div class="chip-row"><div class="chip-sub"></div><div class="chip-score">0</div></div>
       <div class="bubble"></div>
     </div>
     <button class="icon-btn" data-open="menuModal" aria-label="メニュー">☰</button>
@@ -457,6 +490,20 @@ kbd{display:inline-block;padding:0 5px;border:1px solid var(--line);border-botto
   </div>
 </div>
 
+<!-- チャット -->
+<div class="modal" id="chatModal">
+  <div class="modal-card chat-card">
+    <h2>チャット</h2>
+    <div class="chat-log" id="chatLog"></div>
+    <p class="chat-note" id="chatNote" hidden>接続が切れているので、いまは送れません</p>
+    <div class="chat-form">
+      <input id="chatInput" maxlength="80" placeholder="メッセージ（80文字まで）" autocomplete="off" enterkeyhint="send">
+      <button id="chatSend" type="button" class="btn btn-p1">送信</button>
+    </div>
+    <button class="link" type="button" data-chat-close>とじる</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -491,6 +538,8 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 const cleanName = n => String(n || '').replace(/\s+/g, ' ').trim().slice(0, 10);
+const CHAT_MAX = 80, CHAT_LOG_MAX = 50;
+const cleanChat = t => String(t || '').replace(/\s+/g, ' ').trim().slice(0, CHAT_MAX);
 const todayStr = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -589,6 +638,10 @@ function startGame(s) {
 function applyAction(s, actor, a) {
   if (!a || typeof a !== 'object') return null;
   if (a.type === 'stamp') return STAMPS.includes(a.s) ? { ev: { t: 'stamp', p: actor, s: a.s } } : null;
+  if (a.type === 'chat') {
+    const text = cleanChat(a.text);
+    return text ? { ev: { t: 'chat', p: actor, text, at: Date.now() } } : null;
+  }
   if (a.type === 'rematch') {
     if (s.phase !== 'finished') return null;
     startGame(s);
@@ -666,6 +719,7 @@ const sfx = {
   score()   { if (this.ok()) { this.tone(660, 0, .12, 'triangle'); this.tone(990, .08, .2, 'triangle'); } },
   turn()    { if (this.ok()) { this.tone(523, 0, .15); this.tone(784, .12, .28); } },
   fanfare() { if (this.ok()) [523, 659, 784, 1047].forEach((f, i) => this.tone(f, i * .11, .32, 'triangle', .14)); },
+  chat()    { if (this.ok()) { this.tone(880, 0, .1, 'sine', .08); this.tone(1175, .08, .14, 'sine', .08); } },
 };
 document.addEventListener('pointerdown', () => sfx.init(), { passive: true });
 document.addEventListener('keydown', () => sfx.init());
@@ -677,6 +731,7 @@ let pick = null, pickKey = '';
 let shownRollId = null, animating = false, animSet = [], animTick = 0, animEnd = 0;
 let poppedKey = '', resultShownFor = -1, lastTurnKey = '';
 let busy = false, busyT = 0, wasLost = false, lastStamp = 0;
+let chatLog = [], chatUnread = 0, lastChat = 0;
 
 const net = {
   mode: null,        // 'host' | 'guest' | 'local'
@@ -722,7 +777,8 @@ function setFace(el, v) {
   const on = FACES[v] || [];
   [...el.children].forEach((p, k) => p.classList.toggle('on', on.includes(k)));
 }
-$('#stamps').innerHTML = STAMPS.map(s => `<button type="button" data-stamp="${s}">${s}</button>`).join('');
+$('#stamps').innerHTML = STAMPS.map(s => `<button type="button" data-stamp="${s}">${s}</button>`).join('')
+  + '<button type="button" id="chatBtn" class="chat-btn" aria-label="チャット">💬<span class="badge" hidden></span></button>';
 
 /* ================= 描画 ================= */
 function render() {
@@ -760,9 +816,9 @@ function renderTop() {
   [0, 1].forEach(i => {
     const chip = $('#chip' + i), p = s.players[i];
     chip.querySelector('.chip-name .nm').textContent = p.name || '…';
-    chip.querySelector('.chip-name .you-tag').textContent = (net.mode !== 'local' && i === me) ? 'あなた' : '';
     chip.querySelector('.chip-score').textContent = totalOf(p);
     const tags = [];
+    if (net.mode !== 'local' && i === me) tags.push('あなた');
     if (s.phase !== 'waiting') tags.push(i === s.starter ? '先攻' : '後攻');
     if (s.gameNo > 1 || s.wins[i] > 0) tags.push(s.wins[i] + '勝');
     chip.querySelector('.chip-sub').textContent = tags.join('・');
@@ -864,7 +920,8 @@ function renderControls() {
 
   $('#stamps').hidden = net.mode === 'local';
   const stampOk = net.mode === 'host' ? !!(net.conn && net.conn.open) : connOk();
-  $('#stamps').querySelectorAll('button').forEach(b => { b.disabled = !stampOk; });
+  $('#stamps').querySelectorAll('button[data-stamp]').forEach(b => { b.disabled = !stampOk; });
+  renderChatForm();
 }
 
 function renderBanner() {
@@ -906,6 +963,7 @@ function stopAnim() {
 function handleEvent(e) {
   if (!state || !e) return;
   if (e.t === 'stamp') showStamp(e.p, e.s);
+  if (e.t === 'chat') addChat(e);
   if (e.t === 'start') toast(who(state.starter) + 'の先攻！');
   if (e.t === 'scored') {
     const cat = CAT[e.cat];
@@ -922,20 +980,95 @@ function toast(msg) {
   clearTimeout(t._t);
   t._t = setTimeout(() => t.classList.remove('show'), 2300);
 }
-function showStamp(p, s) {
+function showBubble(p, content, isText) {
   const b = $('#chip' + p).querySelector('.bubble');
-  b.textContent = s;
+  b.classList.toggle('text', !!isText);
+  b.textContent = '';
+  if (isText) {
+    const t = document.createElement('span');
+    t.className = 'btxt';
+    t.textContent = content;
+    b.appendChild(t);
+  } else {
+    b.textContent = content;
+  }
   b.classList.remove('show');
   void b.offsetWidth;
   b.classList.add('show');
   clearTimeout(b._t);
-  b._t = setTimeout(() => b.classList.remove('show'), 2400);
+  b._t = setTimeout(() => b.classList.remove('show'), isText ? 3500 : 2400);
+}
+function showStamp(p, s) {
+  showBubble(p, s, false);
   const f = document.createElement('div');
   f.className = 'float-stamp c' + p;
   f.textContent = s;
   document.body.appendChild(f);
   setTimeout(() => f.remove(), 1600);
 }
+/* ---------- チャット ---------- */
+function addChat(e) {
+  if (e.p !== 0 && e.p !== 1) return;
+  const text = cleanChat(e.text);
+  if (!text) return;
+  chatLog.push({ p: e.p, name: state.players[e.p].name, text, at: +e.at || Date.now() });
+  if (chatLog.length > CHAT_LOG_MAX) chatLog.splice(0, chatLog.length - CHAT_LOG_MAX);
+  renderChat();
+  showBubble(e.p, text, true);
+  if (e.p !== net.me) {
+    if (!chatOpen()) { chatUnread++; renderChatBadge(); }
+    sfx.chat();
+  }
+}
+function renderChat() {
+  const box = $('#chatLog');
+  if (!chatLog.length) { box.innerHTML = '<p class="chat-empty">まだメッセージはありません</p>'; return; }
+  const hm = t => { const d = new Date(t); return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  box.innerHTML = chatLog.map(m => {
+    const mine = m.p === net.me;
+    return `<div class="cmsg c${m.p}${mine ? ' me' : ''}"><div class="cmsg-meta">${mine ? '' : esc(m.name) + ' '}${hm(m.at)}</div><div class="cmsg-text">${esc(m.text)}</div></div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+function renderChatBadge() {
+  const b = $('#chatBtn .badge');
+  b.hidden = !chatUnread;
+  b.textContent = chatUnread > 9 ? '9+' : String(chatUnread);
+}
+const chatOpen = () => $('#chatModal').classList.contains('open');
+const chatCanSend = () => net.mode === 'host' ? !!(net.conn && net.conn.open) : net.mode === 'guest' && connOk();
+function renderChatForm() {
+  const ok = chatCanSend();
+  $('#chatSend').disabled = !ok;
+  $('#chatNote').hidden = ok;
+}
+function openChat() {
+  chatUnread = 0;
+  renderChatBadge();
+  renderChat();
+  renderChatForm();
+  $('#chatModal').classList.add('open');
+  setTimeout(() => { try { $('#chatInput').focus({ preventScroll: true }); } catch (e) {} }, 60);
+}
+function closeChat() {
+  $('#chatModal').classList.remove('open');
+  $('#chatInput').blur();
+}
+function sendChat() {
+  const text = cleanChat($('#chatInput').value);
+  if (!text || !chatCanSend() || Date.now() - lastChat < 600) return;
+  lastChat = Date.now();
+  $('#chatInput').value = '';
+  dispatch({ type: 'chat', text });
+}
+function resetChat() {
+  chatLog = [];
+  chatUnread = 0;
+  renderChatBadge();
+  renderChat();
+  $('#chatInput').value = '';
+}
+
 function callout(text) {
   const el = document.createElement('div');
   el.className = 'callout';
@@ -1074,6 +1207,16 @@ $('#stamps').addEventListener('click', e => {
   lastStamp = Date.now();
   dispatch({ type: 'stamp', s: b.dataset.stamp });
 });
+$('#chatBtn').addEventListener('click', openChat);
+$('#chatSend').addEventListener('click', sendChat);
+$('#chatInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); sendChat(); }
+});
+// チャットを閉じても、後ろのモーダルは閉じない
+$('#chatModal').addEventListener('click', e => {
+  e.stopPropagation();
+  if (e.target === e.currentTarget || e.target.closest('[data-chat-close]')) closeChat();
+});
 $('#soundBtn').addEventListener('click', () => {
   sfx.on = !sfx.on;
   lsSet('yacht.sound', sfx.on ? '1' : '0');
@@ -1111,6 +1254,7 @@ function resetUi() {
   shownRollId = null; pick = null; pickKey = '';
   poppedKey = ''; resultShownFor = -1; lastTurnKey = '';
   busy = false; wasLost = false;
+  resetChat();
 }
 function leave() {
   net.gen++;
@@ -1244,6 +1388,7 @@ function hostAccept(c) {
       let ev = null;
       if (state.phase === 'waiting') { startGame(state); ev = { t: 'start' }; }
       send({ t: 'welcome' });
+      send({ t: 'chatlog', log: chatLog });
       if (screen !== 'game') showScreen('game');
       commit({ changed: true, ev });
       if (returning) toast(`${g.name}さんがつながりました`);
@@ -1361,6 +1506,13 @@ function onGuestMsg(msg) {
       break;
     case 'event':
       handleEvent(msg.e);
+      break;
+    case 'chatlog':
+      if (!Array.isArray(msg.log)) break;
+      chatLog = msg.log.slice(-CHAT_LOG_MAX)
+        .map(m => ({ p: m && m.p === 1 ? 1 : 0, name: cleanName(m && m.name), text: cleanChat(m && m.text), at: +(m && m.at) || Date.now() }))
+        .filter(m => m.text);
+      renderChat();
       break;
     case 'reject':
       leave();

@@ -539,6 +539,40 @@ h1{font-size:34px;margin:6px 0 0;letter-spacing:.06em;font-weight:800}
   20%{opacity:1;transform:translate(-50%,0) scale(1.1)}
   100%{opacity:0;transform:translate(-50%,-54px) scale(1)}
 }
+
+/* ---------- チャット ---------- */
+.stamps .chat-btn{position:relative;background:rgba(255,255,255,.24)}
+.chat-btn .badge{
+  position:absolute; top:-6px; right:-5px; min-width:17px; height:17px; padding:0 4px;
+  border-radius:999px; background:var(--p0); color:#fff; font-size:10.5px; font-weight:800; line-height:17px;
+  box-shadow:0 0 0 2px #fff;
+}
+.bubble.text{
+  width:max-content; max-width:min(200px, 46vw); padding:6px 10px; text-align:left;
+  font-size:13px; font-weight:700; line-height:1.4; color:var(--ink);
+}
+.bubble .btxt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.c0 > .bubble.text{left:0;transform:scale(0);transform-origin:18px 0}
+.c1 > .bubble.text{left:auto;right:0;transform:scale(0);transform-origin:calc(100% - 18px) 0}
+.c0 > .bubble.text.show,.c1 > .bubble.text.show{transform:scale(1)}
+#chatModal{z-index:90}
+.chat-card{gap:8px;height:min(540px, calc(100dvh - 32px))}
+.chat-log{
+  flex:1; min-height:120px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;
+  padding:10px; background:var(--bg); border-radius:14px;
+}
+.chat-empty{margin:auto;color:var(--muted);font-size:13px;text-align:center}
+.cmsg{max-width:82%;align-self:flex-start;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.cmsg.me{align-self:flex-end;align-items:flex-end}
+.cmsg-meta{padding:0 4px;font-size:10.5px;font-weight:700;color:var(--muted)}
+.cmsg-text{padding:7px 11px;border-radius:14px 14px 14px 4px;font-size:14px;line-height:1.45;word-break:break-word;background:#fff}
+.cmsg.me .cmsg-text{border-radius:14px 14px 4px 14px}
+.cmsg.c0 .cmsg-text{background:var(--p0s);box-shadow:inset 0 0 0 2px rgba(224,89,61,.22)}
+.cmsg.c1 .cmsg-text{background:var(--p1s);box-shadow:inset 0 0 0 2px rgba(45,127,182,.22)}
+.chat-note{margin:0;font-size:12px;font-weight:700;color:var(--p0);text-align:center}
+.chat-form{display:flex;gap:8px}
+.chat-form input{flex:1;min-width:0;padding:11px 12px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:16px}
+.chat-form .btn{padding:10px 16px;font-size:15px}
 </style>
 </head>
 <body>
@@ -759,6 +793,20 @@ h1{font-size:34px;margin:6px 0 0;letter-spacing:.06em;font-weight:800}
     <div class="cp-title" id="cpTitle"></div>
     <div class="cp-lines" id="cpLines"></div>
     <p class="cp-wait" id="cpWait" hidden></p>
+  </div>
+</div>
+
+<!-- チャット -->
+<div class="modal" id="chatModal">
+  <div class="modal-card chat-card">
+    <h2>チャット</h2>
+    <div class="chat-log" id="chatLog"></div>
+    <p class="chat-note" id="chatNote" hidden>接続が切れているので、いまは送れません</p>
+    <div class="chat-form">
+      <input id="chatInput" maxlength="80" placeholder="メッセージ（80文字まで）" autocomplete="off" enterkeyhint="send">
+      <button id="chatSend" type="button" class="btn btn-p1">送信</button>
+    </div>
+    <button class="link" type="button" data-chat-close>とじる</button>
   </div>
 </div>
 
@@ -1042,6 +1090,8 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 const cleanName = n => String(n || '').replace(/\s+/g, ' ').trim().slice(0, 10);
+const CHAT_MAX = 80, CHAT_LOG_MAX = 50;
+const cleanChat = t => String(t || '').replace(/\s+/g, ' ').trim().slice(0, CHAT_MAX);
 const yen = m => (m < 0 ? '−' : '') + Math.abs(m) + '万';
 function rnd(n) {
   const a = new Uint32Array(1), lim = 4294967296 - (4294967296 % n);
@@ -1130,6 +1180,10 @@ function applyAction(s, actor, a, host) { return stepDone(s, act(s, actor, a)); 
 function act(s, actor, a) {
   if (!a || typeof a !== 'object') return null;
   if (a.type === 'stamp') return STAMPS.includes(a.s) ? { ev: { t: 'stamp', p: actor, s: a.s } } : null;
+  if (a.type === 'chat') {
+    const text = cleanChat(a.text);
+    return text ? { ev: { t: 'chat', p: actor, text, at: Date.now() } } : null;
+  }
   if (a.type === 'rematch') {
     if (s.phase !== 'finished') return null;
     startGame(s);
@@ -2023,6 +2077,7 @@ const sfx = {
   down()  { if (this.ok()) { this.tone(320, 0, .12, 'sawtooth', .1); this.tone(180, .1, .2, 'sawtooth', .09); } },
   turn()  { if (this.ok()) { this.tone(523, 0, .15); this.tone(784, .12, .28); } },
   fanfare() { if (this.ok()) [523, 659, 784, 1047].forEach((f, k) => this.tone(f, k * .11, .32, 'triangle', .14)); },
+  chat()  { if (this.ok()) { this.tone(880, 0, .1, 'sine', .08); this.tone(1175, .08, .14, 'sine', .08); } },
 };
 document.addEventListener('pointerdown', () => sfx.init(), { passive: true });
 document.addEventListener('keydown', () => sfx.init());
@@ -2039,6 +2094,7 @@ const viewPlayers = () => (viewSnap ? viewSnap.players : state.players);
 const viewLog = () => (viewSnap ? viewSnap.log : state.log);
 let wheelDeg = 0, lastTurnKey = '', resultShownFor = -1;
 let busy = false, busyT = 0, wasLost = false, lastStamp = 0, landTimer = 0;
+let chatLog = [], chatUnread = 0, lastChat = 0;
 const net = {
   mode: null, me: 0, code: '', peer: null, peerReady: false, conn: null, pending: null,
   gen: 0, retryT: 0, lastSeen: 0, lastRecon: 0, resume: false, myName: '',
@@ -2314,7 +2370,8 @@ function placeWalkers(instant) {
 }
 layoutBoard();
 window.addEventListener('resize', layoutBoard);
-$('#stamps').innerHTML = STAMPS.map(s => `<button type="button" data-stamp="${s}">${s}</button>`).join('');
+$('#stamps').innerHTML = STAMPS.map(s => `<button type="button" data-stamp="${s}">${s}</button>`).join('')
+  + '<button type="button" id="chatBtn" class="chat-btn" aria-label="チャット">💬<span class="badge" hidden></span></button>';
 // ルーレットの数字
 const wheelEl = $('#wheel');
 for (let v = 1; v <= 10; v++) {
@@ -2542,7 +2599,8 @@ function renderTray() {
   $('#rematchBtn').disabled = !connOk();
   $('#stamps').hidden = net.mode === 'local';
   const stampOk = net.mode === 'host' ? !!(net.conn && net.conn.open) : connOk();
-  $('#stamps').querySelectorAll('button').forEach(b => { b.disabled = !stampOk; });
+  $('#stamps').querySelectorAll('button[data-stamp]').forEach(b => { b.disabled = !stampOk; });
+  renderChatForm();
 }
 function renderBanner() {
   let msg = '';
@@ -2792,6 +2850,7 @@ function flashEvent() {
 function handleEvent(e) {
   if (!state || !e) return;
   if (e.t === 'stamp') showStamp(e.p, e.s);
+  if (e.t === 'chat') addChat(e);
   if (e.t === 'start') toast('ルーレットで先攻・後攻を決めます（後攻は+' + SECOND_BONUS + '万）');
 }
 function toast(msg) {
@@ -2801,19 +2860,94 @@ function toast(msg) {
   clearTimeout(t._t);
   t._t = setTimeout(() => t.classList.remove('show'), 2300);
 }
-function showStamp(p, s) {
+function showBubble(p, content, isText) {
   const b = $('#pcard' + p).querySelector('.bubble');
-  b.textContent = s;
+  b.classList.toggle('text', !!isText);
+  b.textContent = '';
+  if (isText) {
+    const t = document.createElement('span');
+    t.className = 'btxt';
+    t.textContent = content;
+    b.appendChild(t);
+  } else {
+    b.textContent = content;
+  }
   b.classList.remove('show');
   void b.offsetWidth;
   b.classList.add('show');
   clearTimeout(b._t);
-  b._t = setTimeout(() => b.classList.remove('show'), 2400);
+  b._t = setTimeout(() => b.classList.remove('show'), isText ? 3500 : 2400);
+}
+function showStamp(p, s) {
+  showBubble(p, s, false);
   const f = document.createElement('div');
   f.className = 'float-stamp c' + p;
   f.textContent = s;
   document.body.appendChild(f);
   setTimeout(() => f.remove(), 1600);
+}
+
+/* ---------- チャット ---------- */
+function addChat(e) {
+  if (e.p !== 0 && e.p !== 1) return;
+  const text = cleanChat(e.text);
+  if (!text) return;
+  chatLog.push({ p: e.p, name: state.players[e.p].name, text, at: +e.at || Date.now() });
+  if (chatLog.length > CHAT_LOG_MAX) chatLog.splice(0, chatLog.length - CHAT_LOG_MAX);
+  renderChat();
+  showBubble(e.p, text, true);
+  if (e.p !== net.me) {
+    if (!chatOpen()) { chatUnread++; renderChatBadge(); }
+    sfx.chat();
+  }
+}
+function renderChat() {
+  const box = $('#chatLog');
+  if (!chatLog.length) { box.innerHTML = '<p class="chat-empty">まだメッセージはありません</p>'; return; }
+  const hm = t => { const d = new Date(t); return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  box.innerHTML = chatLog.map(m => {
+    const mine = m.p === net.me;
+    return `<div class="cmsg c${m.p}${mine ? ' me' : ''}"><div class="cmsg-meta">${mine ? '' : esc(m.name) + ' '}${hm(m.at)}</div><div class="cmsg-text">${esc(m.text)}</div></div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+function renderChatBadge() {
+  const b = $('#chatBtn .badge');
+  b.hidden = !chatUnread;
+  b.textContent = chatUnread > 9 ? '9+' : String(chatUnread);
+}
+const chatOpen = () => $('#chatModal').classList.contains('open');
+const chatCanSend = () => net.mode === 'host' ? !!(net.conn && net.conn.open) : net.mode === 'guest' && connOk();
+function renderChatForm() {
+  const ok = chatCanSend();
+  $('#chatSend').disabled = !ok;
+  $('#chatNote').hidden = ok;
+}
+function openChat() {
+  chatUnread = 0;
+  renderChatBadge();
+  renderChat();
+  renderChatForm();
+  $('#chatModal').classList.add('open');
+  setTimeout(() => { try { $('#chatInput').focus({ preventScroll: true }); } catch (e) {} }, 60);
+}
+function closeChat() {
+  $('#chatModal').classList.remove('open');
+  $('#chatInput').blur();
+}
+function sendChat() {
+  const text = cleanChat($('#chatInput').value);
+  if (!text || !chatCanSend() || Date.now() - lastChat < 600) return;
+  lastChat = Date.now();
+  $('#chatInput').value = '';
+  dispatch({ type: 'chat', text });
+}
+function resetChat() {
+  chatLog = [];
+  chatUnread = 0;
+  renderChatBadge();
+  renderChat();
+  $('#chatInput').value = '';
 }
 function confetti(n = 70) {
   const box = document.createElement('div');
@@ -2873,7 +3007,7 @@ function dispatch(a) {
   if (!state) return;
   if (net.mode === 'guest') {
     if (!connOk()) return;
-    if (a.type !== 'stamp') {
+    if (a.type !== 'stamp' && a.type !== 'chat') {
       busy = true;
       clearTimeout(busyT);
       busyT = setTimeout(() => { busy = false; render(); }, 5000);
@@ -2949,6 +3083,16 @@ $('#stamps').addEventListener('click', e => {
   lastStamp = Date.now();
   dispatch({ type: 'stamp', s: b.dataset.stamp });
 });
+$('#chatBtn').addEventListener('click', openChat);
+$('#chatSend').addEventListener('click', sendChat);
+$('#chatInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); sendChat(); }
+});
+// チャットを閉じても、後ろのモーダルは閉じない
+$('#chatModal').addEventListener('click', e => {
+  e.stopPropagation();
+  if (e.target === e.currentTarget || e.target.closest('[data-chat-close]')) closeChat();
+});
 $('#historyBtn').addEventListener('click', () => {
   if (!state) return;
   const rows = (state.history || []).slice().reverse().map(turnHTML).join('');
@@ -2999,6 +3143,7 @@ function resetUi() {
   $('#evPop').hidden = true;
   busy = false; wasLost = false;
   lastNet = null; sumKey = ''; evPopDismissed = 0; lastView = null;
+  resetChat();
 }
 function leave() {
   net.gen++;
@@ -3131,6 +3276,7 @@ function hostAccept(c) {
       let evt = null;
       if (state.phase === 'waiting') { startGame(state); evt = { t: 'start' }; }
       send({ t: 'welcome' });
+      send({ t: 'chatlog', log: chatLog });
       if (screen !== 'game') showScreen('game');
       lastNet = null;
       saveHost();
@@ -3255,6 +3401,13 @@ function onGuestMsg(msg) {
       break;
     }
     case 'event': handleEvent(msg.e); break;
+    case 'chatlog':
+      if (!Array.isArray(msg.log)) break;
+      chatLog = msg.log.slice(-CHAT_LOG_MAX)
+        .map(m => ({ p: m && m.p === 1 ? 1 : 0, name: cleanName(m && m.name), text: cleanChat(m && m.text), at: +(m && m.at) || Date.now() }))
+        .filter(m => m.text);
+      renderChat();
+      break;
     case 'reject': leave(); lobbyMsg('この部屋ではもう別の人が遊んでいます'); break;
   }
 }
